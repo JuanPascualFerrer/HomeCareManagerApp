@@ -23,6 +23,7 @@ namespace HomeCareManagerApp
         public MainWindow()
         {
             InitializeComponent();
+
         }
     }
 }
