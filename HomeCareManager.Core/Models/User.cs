@@ -12,6 +12,7 @@ namespace HomeCareManager.Core.Models
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
+        public bool PasswordChanged { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
 

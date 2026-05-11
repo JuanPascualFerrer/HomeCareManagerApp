@@ -338,7 +338,7 @@ namespace HomeCareManager.Core.Data
         public User? GetUserByEmail(string email)
         {
             const string query =
-                "SELECT UserId, Name, RoleId, Email, PasswordHash, IsActive, CreatedAt, SkillId " +
+                "SELECT UserId, Name, RoleId, Email, PasswordHash, PasswordChanged, IsActive, CreatedAt, SkillId " +
                 "FROM users WHERE Email = @email LIMIT 1;";
 
             List<User> users = ExecuteReader(query, reader => new User
@@ -348,6 +348,7 @@ namespace HomeCareManager.Core.Data
                 RoleId = reader.GetString("RoleId"),
                 Email = reader.GetString("Email"),
                 PasswordHash = reader.GetString("PasswordHash"),
+                PasswordChanged = reader.GetBoolean("PasswordChanged"),
                 IsActive = reader.GetBoolean("IsActive"),
                 CreatedAt = reader.GetDateTime("CreatedAt"),
                 SkillId = reader.GetString("SkillId")
@@ -358,8 +359,8 @@ namespace HomeCareManager.Core.Data
 
         public bool InsertUser(User user)
         {
-            string query = "INSERT INTO users(UserId, Name, RoleId, Email, PasswordHash, IsActive, CreatedAt, SkillId) " +
-                "VALUES(@userId, @name, @roleId, @email, @passwordHash, @isActive, @createdAt, @skillId);";
+            string query = "INSERT INTO users(UserId, Name, RoleId, Email, PasswordHash, PasswordChanged, IsActive, CreatedAt, SkillId) " +
+                "VALUES(@userId, @name, @roleId, @email, @passwordHash, @passwordChanged, @isActive, @createdAt, @skillId);";
 
             return InsertIfNotExists(
                 "users",
@@ -371,6 +372,7 @@ namespace HomeCareManager.Core.Data
                 ("@roleId", user.RoleId),
                 ("@email", user.Email),
                 ("@passwordHash", user.PasswordHash),
+                ("@passwordChanged", user.PasswordChanged),
                 ("@isActive", user.IsActive),
                 ("@createdAt", user.CreatedAt),
                 ("@skillId", user.SkillId));
@@ -383,6 +385,7 @@ namespace HomeCareManager.Core.Data
                 "RoleId = @roleId, " +
                 "Email = @email, " +
                 "PasswordHash = @passwordHash, " +
+                "PasswordChanged = @passwordChanged, " +
                 "IsActive = @isActive, " +
                 "CreatedAt = @createdAt, " +
                 "SkillId = @skillId " +
@@ -398,9 +401,27 @@ namespace HomeCareManager.Core.Data
                 ("@roleId", user.RoleId),
                 ("@email", user.Email),
                 ("@passwordHash", user.PasswordHash),
+                ("@passwordChanged", user.PasswordChanged),
                 ("@isActive", user.IsActive),
                 ("@createdAt", user.CreatedAt),
                 ("@skillId", user.SkillId));
+        }
+
+        public bool UpdateUserPassword(string userId, string passwordHash)
+        {
+            string query = "UPDATE users " +
+                "SET PasswordHash = @passwordHash, " +
+                "PasswordChanged = @passwordChanged " +
+                "WHERE UserId = @userId;";
+
+            return UpdateIfExists(
+                "users",
+                "UserId",
+                userId,
+                query,
+                ("@userId", userId),
+                ("@passwordHash", passwordHash),
+                ("@passwordChanged", true));
         }
 
         public bool DeleteUser(string userId)

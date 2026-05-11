@@ -33,7 +33,7 @@ namespace HomeCareManager.Core.Services
                 return null;
             }
 
-            if (user.PasswordHash != password)
+            if (!PasswordHasher.VerifyPassword(password, user.PasswordHash))
             {
                 return null;
             }

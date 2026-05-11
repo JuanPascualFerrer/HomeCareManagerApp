@@ -153,14 +153,18 @@
                 </StackPanel>
 
                 <Border Grid.Row="2"
+                        Cursor="Hand"
                         Background="#1E73C8"
                         CornerRadius="8"
-                        Padding="14">
+                        Padding="14"
+                        MouseLeftButtonUp="OpenProfile_Click">
                     <StackPanel>
-                        <TextBlock Text="Admin"
+                        <TextBlock x:Name="CurrentUserNameText"
+                                   Text="Admin"
                                    Foreground="White"
                                    FontWeight="SemiBold" />
-                        <TextBlock Text="alvaro.juan@homecare.local"
+                        <TextBlock x:Name="CurrentUserEmailText"
+                                   Text="alvaro.juan@homecare.local"
                                    Foreground="#CFE5FF"
                                    FontSize="12"
                                    Margin="0,3,0,0" />
@@ -513,7 +517,7 @@
                                         <DataGridTextColumn Header="Activo" Binding="{Binding Active}" Width="80" />
                                     </DataGrid.Columns>
                                 </DataGrid>
-                                <Button Content="Nuevo usuario" Style="{StaticResource SecondaryButtonStyle}" Margin="0,16,0,0" Click="ShowPendingIntegration_Click" />
+                                <Button Content="New user" Style="{StaticResource SecondaryButtonStyle}" Margin="0,16,0,0" Click="CreateUser_Click" />
                             </StackPanel>
                         </Border>
 

@@ -1,11 +1,13 @@
 using HomeCareManager.Core.Data;
 using HomeCareManager.Core.Models;
+using HomeCareManager.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace HomeCareManagerApp
@@ -34,13 +36,28 @@ namespace HomeCareManagerApp
             currentUser = user;
 
             InitializeComponent();
+            Loaded += MainWindow_Loaded;
             DataContext = this;
             TaskDatePicker.SelectedDate = DateTime.Today;
+            CurrentUserNameText.Text = currentUser.Name;
+            CurrentUserEmailText.Text = currentUser.Email;
 
             LoadSampleData();
             ReloadData(showMessages: false);
             SelectSection(DashboardNavButton);
             ApplyPermissions();
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (!currentUser.PasswordChanged)
+            {
+                MessageBox.Show(
+                    "You are using an initial password. Please open your profile and change it.",
+                    "Password change required",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
         }
 
         private bool IsAdmin()
@@ -83,6 +100,16 @@ namespace HomeCareManagerApp
         private void ReloadData_Click(object sender, RoutedEventArgs e)
         {
             ReloadData(showMessages: true);
+        }
+
+        private void OpenProfile_Click(object sender, MouseButtonEventArgs e)
+        {
+            ProfileWindow dialog = new ProfileWindow(currentUser, database)
+            {
+                Owner = this
+            };
+
+            dialog.ShowDialog();
         }
 
         private void SaveTask_Click(object sender, RoutedEventArgs e)
@@ -195,6 +222,71 @@ namespace HomeCareManagerApp
             MessageBox.Show("Paciente guardado correctamente.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Information);
             ReloadData(showMessages: false);
             SelectSection(PatientsNavButton);
+        }
+
+        private void CreateUser_Click(object sender, RoutedEventArgs e)
+        {
+            if (!IsAdmin())
+            {
+                MessageBox.Show(
+                    "You do not have permission to create users.",
+                    "HomeCare Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            NewUserEditor dialog = new NewUserEditor(SkillOptions)
+            {
+                Owner = this
+            };
+
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            if (database.GetUserByEmail(dialog.Email) != null)
+            {
+                MessageBox.Show(
+                    "A user with this email already exists.",
+                    "HomeCare Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            database.InsertRole(dialog.RoleId, dialog.RoleName);
+            database.InsertSkill(dialog.SkillId, dialog.SkillName);
+
+            User user = new User
+            {
+                UserId = $"user-{Guid.NewGuid():N}".Substring(0, 18),
+                Name = dialog.UserName,
+                Email = dialog.Email,
+                PasswordHash = PasswordHasher.HashPassword(dialog.Password),
+                PasswordChanged = false,
+                IsActive = dialog.UserIsActive,
+                CreatedAt = DateTime.Now,
+                RoleId = dialog.RoleId,
+                SkillId = dialog.SkillId
+            };
+
+            bool saved = database.InsertUser(user);
+
+            if (!saved)
+            {
+                MessageBox.Show(
+                    "The user could not be saved. Check MySQL and the users table.",
+                    "HomeCare Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            MessageBox.Show("User created successfully.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+            ReloadData(showMessages: false);
+            SelectSection(AdminNavButton);
         }
 
         private void ShowPendingIntegration_Click(object sender, RoutedEventArgs e)
