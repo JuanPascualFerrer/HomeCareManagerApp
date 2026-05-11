@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using MySqlConnector;
 using HomeCareManager.Core.Models;
+using System.Security.AccessControl;
 
 namespace HomeCareManager.Core.Data
 {
@@ -331,6 +333,27 @@ namespace HomeCareManager.Core.Data
                 statusId,
                 query,
                 ("@statusId", statusId));
+        }
+
+        public User? GetUserByEmail(string email)
+        {
+            const string query =
+                "SELECT UserId, Name, RoleId, Email, PasswordHash, IsActive, CreatedAt, SkillId " +
+                "FROM users WHERE Email = @email LIMIT 1;";
+
+            List<User> users = ExecuteReader(query, reader => new User
+            {
+                UserId = reader.GetString("UserId"),
+                Name = reader.GetString("Name"),
+                RoleId = reader.GetString("RoleId"),
+                Email = reader.GetString("Email"),
+                PasswordHash = reader.GetString("PasswordHash"),
+                IsActive = reader.GetBoolean("IsActive"),
+                CreatedAt = reader.GetDateTime("CreatedAt"),
+                SkillId = reader.GetString("SkillId")
+            }, ("@email", email));
+
+            return users.FirstOrDefault();
         }
 
         public bool InsertUser(User user)

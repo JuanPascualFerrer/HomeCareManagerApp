@@ -1,25 +1,57 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using HomeCareManager.Core.Models;
+using HomeCareManager.Core.Services;
 
 namespace HomeCareManagerApp
 {
-    /// <summary>
-    /// Lógica de interacción para LoginWindow.xaml
-    /// </summary>
     public partial class LoginWindow : Window
     {
+        private readonly AuthService authService = new AuthService();
+
         public LoginWindow()
         {
             InitializeComponent();
+        }
+
+        private void LoginButton_Click(object sender, RoutedEventArgs e)
+        {
+            TryLogin();
+        }
+
+        private void Input_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                TryLogin();
+            }
+        }
+
+        private void EmailTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ErrorBorder.Visibility = Visibility.Collapsed;
+        }
+
+        private void TryLogin()
+        {
+            ErrorBorder.Visibility = Visibility.Collapsed;
+
+            string email = EmailTextBox.Text.Trim();
+            string password = PasswordBox.Password;
+
+            User? user = authService.Login(email, password);
+
+            if (user == null)
+            {
+                ErrorText.Text = "Email o contraseña incorrectos.";
+                ErrorBorder.Visibility = Visibility.Visible;
+                return;
+            }
+
+            MainWindow mainWindow = new MainWindow();
+            mainWindow.Show();
+            Close();
         }
     }
 }

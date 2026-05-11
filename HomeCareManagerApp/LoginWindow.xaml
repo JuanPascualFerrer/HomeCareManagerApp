@@ -230,7 +230,7 @@
                 <TextBox x:Name="EmailTextBox"
                          Style="{StaticResource InputStyle}"
                          Margin="0,0,0,18"
-                         KeyDown="Input_KeyDown" Text="vffd" TextChanged="EmailTextBox_TextChanged" />
+                         KeyDown="Input_KeyDown" TextChanged="EmailTextBox_TextChanged" />
 
                 <!-- Contraseña -->
                 <TextBlock Text="Password"
@@ -241,7 +241,7 @@
                 <PasswordBox x:Name="PasswordBox"
                              Style="{StaticResource PasswordStyle}"
                              Margin="0,0,0,16"
-                             KeyDown="Input_KeyDown" Password="vddfvfdv" />
+                             KeyDown="Input_KeyDown"/>
 
                 <!-- Mensaje de error (oculto por defecto) -->
                 <Border x:Name="ErrorBorder"

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
+
 
 using HomeCareManager.Core.Data;
 
@@ -14,13 +16,31 @@ namespace HomeCareManager.Core.Services
 
         public User? Login(string email, string password)
         {
-            // 1. Buscar usuario por email
-            // 2. Comprobar si existe
-            // 3. Comprobar si esta activo
-            // 4. Comprobar password
-            // 5. Devolver usuario si todo esta bien
-            return null;
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            {
+                return null;
+            }
+
+            User? user = data.GetUserByEmail(email.Trim());
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            if (!user.IsActive)
+            {
+                return null;
+            }
+
+            if (user.PasswordHash != password)
+            {
+                return null;
+            }
+
+            return user;
         }
+
 
     }
 }
