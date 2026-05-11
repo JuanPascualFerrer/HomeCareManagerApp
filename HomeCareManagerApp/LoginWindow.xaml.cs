@@ -4,11 +4,13 @@ using System.Windows.Input;
 using HomeCareManager.Core.Models;
 using HomeCareManager.Core.Services;
 
+
 namespace HomeCareManagerApp
 {
     public partial class LoginWindow : Window
     {
         private readonly AuthService authService = new AuthService();
+
 
         public LoginWindow()
         {
@@ -49,7 +51,7 @@ namespace HomeCareManagerApp
                 return;
             }
 
-            MainWindow mainWindow = new MainWindow();
+            MainWindow mainWindow = new MainWindow(user);
             mainWindow.Show();
             Close();
         }

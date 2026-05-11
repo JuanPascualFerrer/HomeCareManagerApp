@@ -203,10 +203,12 @@
                                    Foreground="{StaticResource MutedBrush}"
                                    VerticalAlignment="Center"
                                    Margin="0,0,16,0" />
-                        <Button Content="Nueva tarea"
-                                Style="{StaticResource PrimaryButtonStyle}"
-                                Margin="0,0,10,0"
-                                Click="OpenCreateTask_Click" />
+                        <Button x:Name="NewTaskButton"
+                            Content="New task"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Margin="0,0,10,0"
+                            Click="OpenCreateTask_Click" />
+
                         <Button Content="Sincronizar"
                                 Style="{StaticResource SecondaryButtonStyle}"
                                 Click="ReloadData_Click" />
@@ -339,7 +341,12 @@
                                     <ComboBoxItem Content="Centro" />
                                     <ComboBoxItem Content="Zona Este" />
                                 </ComboBox>
-                                <Button Grid.Column="2" Content="Nuevo paciente" Style="{StaticResource PrimaryButtonStyle}" Click="NewPatient_Click" />
+                                <Button x:Name="NewPatientButton"
+                                    Grid.Column="2"
+                                    Content="New patient"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Click="NewPatient_Click" />
+
                             </Grid>
                         </Border>
 
@@ -386,7 +393,12 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                        <Border x:Name="CreateTaskPanel"
+                            Background="White"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="20">
                             <StackPanel>
                                 <TextBlock Text="Crear tarea" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
                                 <TextBlock Text="Paciente" Style="{StaticResource FieldLabelStyle}" Margin="0,18,0,2" />

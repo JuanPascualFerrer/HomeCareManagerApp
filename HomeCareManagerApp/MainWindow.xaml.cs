@@ -1,3 +1,5 @@
+using HomeCareManager.Core.Data;
+using HomeCareManager.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -5,7 +7,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using HomeCareManager.Core.Data;
 
 namespace HomeCareManagerApp
 {
@@ -25,16 +26,46 @@ namespace HomeCareManagerApp
         public ObservableCollection<LookupOption> SkillOptions { get; } = new ObservableCollection<LookupOption>();
         public ObservableCollection<LookupOption> StatusOptions { get; } = new ObservableCollection<LookupOption>();
 
-        public MainWindow()
+        private readonly User currentUser;
+
+        public MainWindow(User user)
         {
+
+            currentUser = user;
 
             InitializeComponent();
             DataContext = this;
             TaskDatePicker.SelectedDate = DateTime.Today;
+
             LoadSampleData();
             ReloadData(showMessages: false);
             SelectSection(DashboardNavButton);
+            ApplyPermissions();
         }
+
+        private bool IsAdmin()
+        {
+            return currentUser.RoleId.Equals("admin", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool CanCreatePatientsAndTasks()
+        {
+            return currentUser.RoleId.Equals("admin", StringComparison.OrdinalIgnoreCase)
+                || currentUser.RoleId.Equals("doctor", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void ApplyPermissions()
+        {
+            bool isAdmin = IsAdmin();
+            bool canCreatePatientsAndTasks = CanCreatePatientsAndTasks();
+
+            AdminNavButton.Visibility = isAdmin ? Visibility.Visible : Visibility.Collapsed;
+
+            NewTaskButton.Visibility = canCreatePatientsAndTasks ? Visibility.Visible : Visibility.Collapsed;
+            NewPatientButton.Visibility = canCreatePatientsAndTasks ? Visibility.Visible : Visibility.Collapsed;
+            CreateTaskPanel.Visibility = canCreatePatientsAndTasks ? Visibility.Visible : Visibility.Collapsed;
+        }
+
 
         private void Navigate_Click(object sender, RoutedEventArgs e)
         {
@@ -56,6 +87,16 @@ namespace HomeCareManagerApp
 
         private void SaveTask_Click(object sender, RoutedEventArgs e)
         {
+            if (!CanCreatePatientsAndTasks())
+            {
+                MessageBox.Show(
+                    "You do not have permission to create tasks.",
+                    "HomeCare Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             if (TaskPatientComboBox.SelectedItem is not PatientOption patient)
             {
                 MessageBox.Show("Selecciona un paciente.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -110,6 +151,16 @@ namespace HomeCareManagerApp
 
         private void NewPatient_Click(object sender, RoutedEventArgs e)
         {
+            if (!CanCreatePatientsAndTasks())
+            {
+                MessageBox.Show(
+                    "You do not have permission to create patients.",
+                    "HomeCare Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
             PatientEditorWindow dialog = new PatientEditorWindow
             {
                 Owner = this
