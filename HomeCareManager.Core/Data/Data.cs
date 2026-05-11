@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using MySqlConnector;
 using HomeCareManager.Core.Models;
 
@@ -11,12 +7,20 @@ namespace HomeCareManager.Core.Data
 {
     public class Data
     {
-        
-        private readonly string connectionString =
+        private const string DefaultConnectionString =
             "datasource = 127.0.0.1;" +
             "port = 3306;" +
             "username = root; password = ;" +
             "database = homecaremanager";
+
+        private readonly string connectionString;
+
+        public Data(string? connectionString = null)
+        {
+            this.connectionString = string.IsNullOrWhiteSpace(connectionString)
+                ? DefaultConnectionString
+                : connectionString;
+        }
 
         private bool ExecuteNonQuery(string query, params (string Name, object Value)[] parameters)
         {
@@ -31,6 +35,80 @@ namespace HomeCareManager.Core.Data
                         connection.Open();
                         return commandDatabase.ExecuteNonQuery() > 0;
                     }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+        }
+
+        private List<T> ExecuteReader<T>(
+            string query,
+            Func<MySqlDataReader, T> map,
+            params (string Name, object Value)[] parameters)
+        {
+            List<T> rows = new List<T>();
+
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    using (MySqlCommand commandDatabase = new MySqlCommand(query, connection))
+                    {
+                        AddParameters(commandDatabase, parameters);
+
+                        connection.Open();
+                        using (MySqlDataReader reader = commandDatabase.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                rows.Add(map(reader));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return rows;
+        }
+
+        private int ExecuteCount(string query, params (string Name, object Value)[] parameters)
+        {
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    using (MySqlCommand commandDatabase = new MySqlCommand(query, connection))
+                    {
+                        AddParameters(commandDatabase, parameters);
+
+                        connection.Open();
+                        object? result = commandDatabase.ExecuteScalar();
+                        return result == null ? 0 : Convert.ToInt32(result);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return 0;
+            }
+        }
+
+        public bool CanConnect()
+        {
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    connection.Open();
+                    return true;
                 }
             }
             catch (Exception ex)
@@ -57,8 +135,8 @@ namespace HomeCareManager.Core.Data
 
                         connection.Open();
 
-                        object result = commandDatabase.ExecuteScalar();
-                        return Convert.ToInt32(result) > 0;
+                        object? result = commandDatabase.ExecuteScalar();
+                        return result != null && Convert.ToInt32(result) > 0;
                     }
                 }
             }
@@ -718,7 +796,130 @@ namespace HomeCareManager.Core.Data
                 query,
                 ("@availabilityId", availabilityId));
         }
-    
-    }
 
+        public List<Patient> GetPatients()
+        {
+            const string query = "SELECT PatientId, Name, Address, Phone, Notes, Priority, EmergencyContact, Zone " +
+                "FROM patients ORDER BY Name;";
+
+            return ExecuteReader(query, reader => new Patient
+            {
+                PatientId = reader.GetString("PatientId"),
+                Name = reader.GetString("Name"),
+                Address = reader.GetString("Address"),
+                Phone = reader.GetString("Phone"),
+                Notes = reader.GetString("Notes"),
+                Priority = reader.GetString("Priority"),
+                EmergencyContact = reader.GetString("EmergencyContact"),
+                Zone = reader.GetString("Zone")
+            });
+        }
+
+        public List<UserSummary> GetUserSummaries()
+        {
+            const string query = "SELECT u.UserId, u.Name, u.IsActive, COALESCE(r.RoleName, u.RoleId) AS RoleName " +
+                "FROM users u " +
+                "LEFT JOIN roles r ON r.RoleId = u.RoleId " +
+                "ORDER BY u.Name;";
+
+            return ExecuteReader(query, reader => new UserSummary
+            {
+                UserId = reader.GetString("UserId"),
+                Name = reader.GetString("Name"),
+                RoleName = reader.GetString("RoleName"),
+                IsActive = reader.GetBoolean("IsActive")
+            });
+        }
+
+        public List<TaskSummary> GetTaskSummaries()
+        {
+            const string query = "SELECT t.TaskId, t.RequiredSkillId, t.PatientId, t.Description, t.Date, t.Priority, t.StatusId, " +
+                "COALESCE(p.Name, t.PatientId) AS PatientName, " +
+                "COALESCE(p.Zone, '') AS PatientZone, " +
+                "COALESCE(ts.Name, t.StatusId) AS StatusName " +
+                "FROM tasks t " +
+                "LEFT JOIN patients p ON p.PatientId = t.PatientId " +
+                "LEFT JOIN task_status ts ON ts.StatusId = t.StatusId " +
+                "ORDER BY t.Date DESC;";
+
+            return ExecuteReader(query, reader => new TaskSummary
+            {
+                TaskId = reader.GetString("TaskId"),
+                RequiredSkillId = reader.GetString("RequiredSkillId"),
+                PatientId = reader.GetString("PatientId"),
+                PatientName = reader.GetString("PatientName"),
+                PatientZone = reader.GetString("PatientZone"),
+                Description = reader.GetString("Description"),
+                Date = reader.GetDateTime("Date"),
+                Priority = reader.GetString("Priority"),
+                StatusId = reader.GetString("StatusId"),
+                StatusName = reader.GetString("StatusName")
+            });
+        }
+
+        public List<IncidentSummary> GetIncidentSummaries()
+        {
+            const string query = "SELECT i.IncidentId, i.Status, i.CreatedAt, " +
+                "COALESCE(p.Name, '') AS PatientName, " +
+                "COALESCE(t.Description, i.TaskId) AS TaskDescription " +
+                "FROM incidents i " +
+                "LEFT JOIN tasks t ON t.TaskId = i.TaskId " +
+                "LEFT JOIN patients p ON p.PatientId = t.PatientId " +
+                "ORDER BY i.CreatedAt DESC;";
+
+            return ExecuteReader(query, reader => new IncidentSummary
+            {
+                IncidentId = reader.GetString("IncidentId"),
+                PatientName = reader.GetString("PatientName"),
+                TaskDescription = reader.GetString("TaskDescription"),
+                Status = reader.GetString("Status"),
+                CreatedAt = reader.GetDateTime("CreatedAt")
+            });
+        }
+
+        public List<Skill> GetSkills()
+        {
+            const string query = "SELECT SkillId, Name FROM skills ORDER BY Name;";
+
+            return ExecuteReader(query, reader => new Skill
+            {
+                SkillId = reader.GetString("SkillId"),
+                Name = reader.GetString("Name")
+            });
+        }
+
+        public List<HomeCareManager.Core.Models.TaskStatus> GetTaskStatuses()
+        {
+            const string query = "SELECT StatusId, Name FROM task_status ORDER BY Name;";
+
+            return ExecuteReader(query, reader => new HomeCareManager.Core.Models.TaskStatus
+            {
+                StatusId = reader.GetString("StatusId"),
+                Name = reader.GetString("Name")
+            });
+        }
+
+        public int CountActivePatients()
+        {
+            return ExecuteCount("SELECT COUNT(*) FROM patients;");
+        }
+
+        public int CountPendingTasks()
+        {
+            return ExecuteCount("SELECT COUNT(*) FROM tasks t " +
+                "LEFT JOIN task_status ts ON ts.StatusId = t.StatusId " +
+                "WHERE LOWER(COALESCE(ts.Name, t.StatusId)) IN ('pending', 'pendiente');");
+        }
+
+        public int CountActiveUsers()
+        {
+            return ExecuteCount("SELECT COUNT(*) FROM users WHERE IsActive = 1;");
+        }
+
+        public int CountOpenIncidents()
+        {
+            return ExecuteCount("SELECT COUNT(*) FROM incidents " +
+                "WHERE LOWER(Status) NOT IN ('closed', 'cerrada', 'cerrado', 'resuelta', 'resuelto');");
+        }
+    }
 }

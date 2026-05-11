@@ -198,13 +198,18 @@
                     <StackPanel Grid.Column="1"
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center">
+                        <TextBlock x:Name="ConnectionStatusText"
+                                   Text="Datos de ejemplo"
+                                   Foreground="{StaticResource MutedBrush}"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,16,0" />
                         <Button Content="Nueva tarea"
                                 Style="{StaticResource PrimaryButtonStyle}"
                                 Margin="0,0,10,0"
                                 Click="OpenCreateTask_Click" />
                         <Button Content="Sincronizar"
                                 Style="{StaticResource SecondaryButtonStyle}"
-                                Click="ShowPendingIntegration_Click" />
+                                Click="ReloadData_Click" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -224,28 +229,28 @@
                             <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,14,0">
                                 <StackPanel>
                                     <TextBlock Text="Pacientes activos" Foreground="{StaticResource MutedBrush}" />
-                                    <TextBlock Text="24" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,8,0,0" />
-                                    <TextBlock Text="3 con prioridad alta" Foreground="{StaticResource TealBrush}" FontSize="12" />
+                                    <TextBlock x:Name="PatientCountText" Text="0" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,8,0,0" />
+                                    <TextBlock x:Name="PatientMetaText" Text="Cargando datos" Foreground="{StaticResource TealBrush}" FontSize="12" />
                                 </StackPanel>
                             </Border>
                             <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,14,0">
                                 <StackPanel>
                                     <TextBlock Text="Tareas pendientes" Foreground="{StaticResource MutedBrush}" />
-                                    <TextBlock Text="17" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,8,0,0" />
-                                    <TextBlock Text="6 sin asignar" Foreground="{StaticResource GoldBrush}" FontSize="12" />
+                                    <TextBlock x:Name="TaskCountText" Text="0" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,8,0,0" />
+                                    <TextBlock x:Name="TaskMetaText" Text="Pendientes por revisar" Foreground="{StaticResource GoldBrush}" FontSize="12" />
                                 </StackPanel>
                             </Border>
                             <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,14,0">
                                 <StackPanel>
                                     <TextBlock Text="Cuidadores" Foreground="{StaticResource MutedBrush}" />
-                                    <TextBlock Text="8" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,8,0,0" />
-                                    <TextBlock Text="5 disponibles hoy" Foreground="{StaticResource TealBrush}" FontSize="12" />
+                                    <TextBlock x:Name="UserCountText" Text="0" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,8,0,0" />
+                                    <TextBlock x:Name="UserMetaText" Text="Usuarios activos" Foreground="{StaticResource TealBrush}" FontSize="12" />
                                 </StackPanel>
                             </Border>
                             <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18">
                                 <StackPanel>
                                     <TextBlock Text="Incidencias" Foreground="{StaticResource MutedBrush}" />
-                                    <TextBlock Text="2" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,8,0,0" />
+                                    <TextBlock x:Name="IncidentCountText" Text="0" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,8,0,0" />
                                     <TextBlock Text="Requieren seguimiento" Foreground="#D97706" FontSize="12" />
                                 </StackPanel>
                             </Border>
@@ -261,52 +266,26 @@
                             <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                                 <StackPanel>
                                     <TextBlock Text="Tareas de hoy" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
-                                    <ListView Margin="0,14,0,0" BorderThickness="0">
-                                        <ListViewItem Padding="0,8">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel>
-                                                    <TextBlock Text="Administrar medicacion" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                                                    <TextBlock Text="Paciente: Maria Lopez - Zona Norte" Foreground="{StaticResource MutedBrush}" FontSize="12" />
-                                                </StackPanel>
-                                                <Border Grid.Column="1" Background="#FFF8E1" CornerRadius="8" Padding="10,4">
-                                                    <TextBlock Text="Alta" Foreground="#9A6500" FontWeight="SemiBold" />
-                                                </Border>
-                                            </Grid>
-                                        </ListViewItem>
-                                        <ListViewItem Padding="0,8">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel>
-                                                    <TextBlock Text="Revision de constantes" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                                                    <TextBlock Text="Paciente: Luis Martin - Centro" Foreground="{StaticResource MutedBrush}" FontSize="12" />
-                                                </StackPanel>
-                                                <Border Grid.Column="1" Background="#E0F2F1" CornerRadius="8" Padding="10,4">
-                                                    <TextBlock Text="Media" Foreground="{StaticResource TealBrush}" FontWeight="SemiBold" />
-                                                </Border>
-                                            </Grid>
-                                        </ListViewItem>
-                                        <ListViewItem Padding="0,8">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel>
-                                                    <TextBlock Text="Apoyo en movilidad" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                                                    <TextBlock Text="Paciente: Ana Ruiz - Zona Este" Foreground="{StaticResource MutedBrush}" FontSize="12" />
-                                                </StackPanel>
-                                                <Border Grid.Column="1" Background="#E3F2FD" CornerRadius="8" Padding="10,4">
-                                                    <TextBlock Text="Pendiente" Foreground="{StaticResource BlueBrush}" FontWeight="SemiBold" />
-                                                </Border>
-                                            </Grid>
-                                        </ListViewItem>
+                                    <ListView Margin="0,14,0,0"
+                                              BorderThickness="0"
+                                              ItemsSource="{Binding Tasks}">
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Description}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                                                        <TextBlock Text="{Binding Summary}" Foreground="{StaticResource MutedBrush}" FontSize="12" />
+                                                    </StackPanel>
+                                                    <Border Grid.Column="1" Background="#E3F2FD" CornerRadius="8" Padding="10,4">
+                                                        <TextBlock Text="{Binding Priority}" Foreground="{StaticResource BlueBrush}" FontWeight="SemiBold" />
+                                                    </Border>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
                                     </ListView>
                                 </StackPanel>
                             </Border>
@@ -360,7 +339,7 @@
                                     <ComboBoxItem Content="Centro" />
                                     <ComboBoxItem Content="Zona Este" />
                                 </ComboBox>
-                                <Button Grid.Column="2" Content="Nuevo paciente" Style="{StaticResource PrimaryButtonStyle}" Click="ShowPendingIntegration_Click" />
+                                <Button Grid.Column="2" Content="Nuevo paciente" Style="{StaticResource PrimaryButtonStyle}" Click="NewPatient_Click" />
                             </Grid>
                         </Border>
 
@@ -411,13 +390,16 @@
                             <StackPanel>
                                 <TextBlock Text="Crear tarea" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
                                 <TextBlock Text="Paciente" Style="{StaticResource FieldLabelStyle}" Margin="0,18,0,2" />
-                                <ComboBox Height="36" SelectedIndex="0">
-                                    <ComboBoxItem Content="Maria Lopez" />
-                                    <ComboBoxItem Content="Luis Martin" />
-                                    <ComboBoxItem Content="Ana Ruiz" />
-                                </ComboBox>
+                                <ComboBox x:Name="TaskPatientComboBox"
+                                          Height="36"
+                                          DisplayMemberPath="Name"
+                                          ItemsSource="{Binding PatientOptions}" />
                                 <TextBlock Text="Descripcion" Style="{StaticResource FieldLabelStyle}" Margin="0,12,0,2" />
-                                <TextBox Height="82" TextWrapping="Wrap" AcceptsReturn="True" Text="Administrar medicacion y registrar observaciones." />
+                                <TextBox x:Name="TaskDescriptionTextBox"
+                                         Height="82"
+                                         TextWrapping="Wrap"
+                                         AcceptsReturn="True"
+                                         Text="Administrar medicacion y registrar observaciones." />
                                 <Grid Margin="0,12,0,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -426,35 +408,45 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
                                         <TextBlock Text="Fecha" Style="{StaticResource FieldLabelStyle}" />
-                                        <DatePicker Height="36" SelectedDate="{x:Static sys:DateTime.Today}" xmlns:sys="clr-namespace:System;assembly=mscorlib" />
+                                        <DatePicker x:Name="TaskDatePicker" Height="36" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
                                         <TextBlock Text="Prioridad" Style="{StaticResource FieldLabelStyle}" />
-                                        <ComboBox Height="36" SelectedIndex="0">
+                                        <ComboBox x:Name="TaskPriorityComboBox" Height="36" SelectedIndex="0">
                                             <ComboBoxItem Content="Alta" />
                                             <ComboBoxItem Content="Media" />
                                             <ComboBoxItem Content="Baja" />
                                         </ComboBox>
                                     </StackPanel>
                                 </Grid>
-                                <TextBlock Text="Cuidador asignado" Style="{StaticResource FieldLabelStyle}" Margin="0,12,0,2" />
-                                <ComboBox Height="36" SelectedIndex="0">
-                                    <ComboBoxItem Content="Asignacion automatica" />
-                                    <ComboBoxItem Content="Carmen Diaz" />
-                                    <ComboBoxItem Content="Pablo Sanz" />
-                                </ComboBox>
-                                <Button Content="Guardar tarea" Style="{StaticResource PrimaryButtonStyle}" Margin="0,18,0,0" Click="ShowPendingIntegration_Click" />
+                                <TextBlock Text="Habilidad requerida" Style="{StaticResource FieldLabelStyle}" Margin="0,12,0,2" />
+                                <ComboBox x:Name="TaskSkillComboBox"
+                                          Height="36"
+                                          DisplayMemberPath="Name"
+                                          ItemsSource="{Binding SkillOptions}" />
+                                <TextBlock Text="Estado inicial" Style="{StaticResource FieldLabelStyle}" Margin="0,12,0,2" />
+                                <ComboBox x:Name="TaskStatusComboBox"
+                                          Height="36"
+                                          DisplayMemberPath="Name"
+                                          ItemsSource="{Binding StatusOptions}" />
+                                <Button Content="Guardar tarea" Style="{StaticResource PrimaryButtonStyle}" Margin="0,18,0,0" Click="SaveTask_Click" />
                             </StackPanel>
                         </Border>
 
                         <Border Grid.Column="2" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                             <StackPanel>
                                 <TextBlock Text="Estado de tareas" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
-                                <ListBox Margin="0,14,0,0" BorderThickness="0">
-                                    <ListBoxItem Content="Pendiente - Revision de constantes" Padding="0,8" />
-                                    <ListBoxItem Content="Aceptada - Apoyo en movilidad" Padding="0,8" />
-                                    <ListBoxItem Content="Disponible - Cura basica" Padding="0,8" />
-                                    <ListBoxItem Content="Completada - Control de medicacion" Padding="0,8" />
+                                <ListBox Margin="0,14,0,0"
+                                         BorderThickness="0"
+                                         ItemsSource="{Binding Tasks}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="0,8">
+                                                <TextBlock Text="{Binding StatusLine}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                                                <TextBlock Text="{Binding PatientName}" Foreground="{StaticResource MutedBrush}" FontSize="12" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
                                 </ListBox>
                             </StackPanel>
                         </Border>
@@ -522,8 +514,8 @@
                                            Margin="0,14,0,18" />
                                 <CheckBox Content="Base de datos creada con HomeCareManager.sql" IsChecked="True" Margin="0,0,0,8" />
                                 <CheckBox Content="Consultas parametrizadas" IsChecked="True" Margin="0,0,0,8" />
-                                <CheckBox Content="Proyecto Core compartido" IsChecked="False" Margin="0,0,0,8" />
-                                <CheckBox Content="Pantallas conectadas a MySQL" IsChecked="False" />
+                                <CheckBox Content="Proyecto Core compartido" IsChecked="True" Margin="0,0,0,8" />
+                                <CheckBox Content="Pantallas conectadas a MySQL" IsChecked="True" />
                             </StackPanel>
                         </Border>
                     </Grid>

@@ -1,0 +1,125 @@
+<Window x:Class="HomeCareManagerApp.PatientEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nuevo paciente"
+        Height="620"
+        Width="520"
+        MinHeight="560"
+        MinWidth="480"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F5F7FA">
+    <Window.Resources>
+        <SolidColorBrush x:Key="BlueBrush" Color="#1565C0" />
+        <SolidColorBrush x:Key="TextBrush" Color="#1A2340" />
+        <SolidColorBrush x:Key="MutedBrush" Color="#5F6F8D" />
+        <SolidColorBrush x:Key="BorderBrush" Color="#D9E2EF" />
+
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource BlueBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="16,10" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+            <Setter Property="Background" Value="#E3F2FD" />
+            <Setter Property="Foreground" Value="#1565C0" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Text="Nuevo paciente"
+                       Foreground="{StaticResource TextBrush}"
+                       FontSize="24"
+                       FontWeight="Bold" />
+            <TextBlock Text="Registra los datos principales para poder crear tareas de cuidado."
+                       Foreground="{StaticResource MutedBrush}"
+                       Margin="0,6,0,20"
+                       TextWrapping="Wrap" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="Nombre" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox x:Name="NameTextBox" Height="36" Margin="0,0,0,12" />
+
+                <TextBlock Text="Direccion" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox x:Name="AddressTextBox" Height="36" Margin="0,0,0,12" />
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Telefono" Style="{StaticResource FieldLabelStyle}" />
+                        <TextBox x:Name="PhoneTextBox" Height="36" Margin="0,0,0,12" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Zona" Style="{StaticResource FieldLabelStyle}" />
+                        <TextBox x:Name="ZoneTextBox" Height="36" Margin="0,0,0,12" />
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Text="Prioridad" Style="{StaticResource FieldLabelStyle}" />
+                <ComboBox x:Name="PriorityComboBox" Height="36" SelectedIndex="1" Margin="0,0,0,12">
+                    <ComboBoxItem Content="Alta" />
+                    <ComboBoxItem Content="Media" />
+                    <ComboBoxItem Content="Baja" />
+                </ComboBox>
+
+                <TextBlock Text="Contacto de emergencia" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox x:Name="EmergencyContactTextBox" Height="36" Margin="0,0,0,12" />
+
+                <TextBlock Text="Notas" Style="{StaticResource FieldLabelStyle}" />
+                <TextBox x:Name="NotesTextBox"
+                         Height="96"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,18,0,0">
+            <Button Content="Cancelar"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Margin="0,0,10,0"
+                    Click="Cancel_Click" />
+            <Button Content="Guardar paciente"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Click="Save_Click" />
+        </StackPanel>
+    </Grid>
+</Window>
