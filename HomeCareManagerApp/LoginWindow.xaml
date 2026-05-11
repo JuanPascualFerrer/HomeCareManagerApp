@@ -5,16 +5,22 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HomeCareManagerApp"
         mc:Ignorable="d"
-        Title="LoginWindow" Height="450" Width="800">
-    <Window.Resources>
-        <SolidColorBrush x:Key="BlueBrush" Color="#1565C0" />
-        <SolidColorBrush x:Key="BlueSoftBrush" Color="#F4F9FF" />
-        <SolidColorBrush x:Key="TealBrush" Color="#00897B" />
-        <SolidColorBrush x:Key="GoldBrush" Color="#F59E0B" />
-        <SolidColorBrush x:Key="TextBrush" Color="#1A2340" />
-        <SolidColorBrush x:Key="MutedBrush" Color="#5F6F8D" />
-        <SolidColorBrush x:Key="BorderBrush" Color="#D9E2EF" />
+        Title="HomeCare Manager — Login"
+        Height="520" Width="860"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen">
 
+    <Window.Resources>
+        <!-- ── Tus colores originales, sin tocar ── -->
+        <SolidColorBrush x:Key="BlueBrush"    Color="#1565C0" />
+        <SolidColorBrush x:Key="BlueSoftBrush" Color="#F4F9FF" />
+        <SolidColorBrush x:Key="TealBrush"    Color="#00897B" />
+        <SolidColorBrush x:Key="GoldBrush"    Color="#F59E0B" />
+        <SolidColorBrush x:Key="TextBrush"    Color="#1A2340" />
+        <SolidColorBrush x:Key="MutedBrush"   Color="#5F6F8D" />
+        <SolidColorBrush x:Key="BorderBrush"  Color="#D9E2EF" />
+
+        <!-- ── Tu NavButtonStyle original, sin tocar ── -->
         <Style x:Key="NavButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="#DCEBFF" />
@@ -29,11 +35,11 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Root"
-                             Background="{TemplateBinding Background}"
-                             CornerRadius="8"
-                             Padding="{TemplateBinding Padding}">
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                           VerticalAlignment="Center" />
+                                              VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -44,17 +50,222 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- ── NUEVO: estilo para los campos de texto ── -->
+        <Style x:Key="InputStyle" TargetType="TextBox">
+            <Setter Property="Height" Value="42" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="#F8FAFC" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="#1565C0" />
+                                <Setter TargetName="Root" Property="Background" Value="White" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ── NUEVO: estilo para el campo de contraseña ── -->
+        <Style x:Key="PasswordStyle" TargetType="PasswordBox">
+            <Setter Property="Height" Value="42" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Background" Value="#F8FAFC" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="#1565C0" />
+                                <Setter TargetName="Root" Property="Background" Value="White" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- ── NUEVO: estilo para el botón principal ── -->
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource BlueBrush}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#0D47A1" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Background" Value="#90A4AE" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Window.Resources>
-    <Grid Background="{StaticResource BlueBrush}">
+
+
+    <!-- ═══════════════════════════════════════════
+         LAYOUT: columna azul izquierda | formulario derecha
+    ════════════════════════════════════════════ -->
+    <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="0*"/>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="300" />
+            <!-- Panel de marca -->
+            <ColumnDefinition Width="*"   />
+            <!-- Panel del formulario -->
         </Grid.ColumnDefinitions>
 
-        <TextBlock Text="HomeCare Manager"
-            Foreground="White"
-            FontSize="21"
-            FontWeight="Bold" Margin="300,31,297,375" Grid.ColumnSpan="2" />
+        <!-- ─────────────────────────────────────
+             COLUMNA 0  —  Panel azul de marca
+        ───────────────────────────────────── -->
+        <Grid Grid.Column="0" Background="{StaticResource BlueBrush}">
+            <StackPanel VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Margin="32,0">
 
+                <!-- Icono -->
+                <Border Width="64" Height="64"
+                        CornerRadius="16"
+                        Background="#FFFFFF20"
+                        HorizontalAlignment="Left"
+                        Margin="0,0,0,20">
+                    <TextBlock Text="🏥"
+                               FontSize="32"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Border>
+
+                <!-- Nombre de la app (tu TextBlock original, reubicado aquí) -->
+                <TextBlock Text="HomeCare"
+                           Foreground="White"
+                           FontSize="24"
+                           FontWeight="Bold" />
+                <TextBlock Text="Manager"
+                           Foreground="#7EC8F5"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           Margin="0,0,0,12" />
+
+                <!-- Descripción -->
+                <TextBlock Text="Desktop application for organising home care services."
+                           Foreground="#FFFFFFA0"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           LineHeight="18" />
+            </StackPanel>
+        </Grid>
+
+        <!-- ─────────────────────────────────────
+             COLUMNA 1  —  Formulario de login
+        ───────────────────────────────────── -->
+        <Grid Grid.Column="1" Background="White">
+            <StackPanel VerticalAlignment="Center"
+                        Margin="50,0"
+                        MaxWidth="320">
+
+                <!-- Título del formulario -->
+                <TextBlock Text="Welcome back"
+                           FontSize="22"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource TextBrush}"
+                           Margin="0,0,0,6" />
+                <TextBlock Text="Sign in to your account."
+                           FontSize="13"
+                           Foreground="{StaticResource MutedBrush}"
+                           Margin="0,0,0,28" />
+
+                <!-- Email -->
+                <TextBlock Text="Email address"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource TextBrush}"
+                           Margin="0,0,0,6" />
+                <TextBox x:Name="EmailTextBox"
+                         Style="{StaticResource InputStyle}"
+                         Margin="0,0,0,18"
+                         KeyDown="Input_KeyDown" Text="vffd" TextChanged="EmailTextBox_TextChanged" />
+
+                <!-- Contraseña -->
+                <TextBlock Text="Password"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource TextBrush}"
+                           Margin="0,0,0,6" />
+                <PasswordBox x:Name="PasswordBox"
+                             Style="{StaticResource PasswordStyle}"
+                             Margin="0,0,0,16"
+                             KeyDown="Input_KeyDown" Password="vddfvfdv" />
+
+                <!-- Mensaje de error (oculto por defecto) -->
+                <Border x:Name="ErrorBorder"
+                        CornerRadius="6"
+                        Background="#FFEBEE"
+                        BorderBrush="#EF9A9A"
+                        BorderThickness="1"
+                        Padding="12,10"
+                        Margin="0,0,0,16"
+                        Visibility="Collapsed">
+                    <TextBlock x:Name="ErrorText"
+                               FontSize="12"
+                               Foreground="#C62828"
+                               TextWrapping="Wrap" />
+                </Border>
+
+                <!-- Botón Sign In -->
+                <Button x:Name="LoginButton"
+                        Content="Sign In"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Click="LoginButton_Click" />
+
+            </StackPanel>
+        </Grid>
     </Grid>
+
 </Window>
