@@ -10,6 +10,8 @@ namespace HomeCareManagerApp
         private readonly User user;
         private readonly Data database;
 
+        public bool LogoutRequested { get; private set; }
+
         public ProfileWindow(User user, Data database)
         {
             this.user = user;
@@ -80,6 +82,12 @@ namespace HomeCareManagerApp
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
+            Close();
+        }
+
+        private void Logout_Click(object sender, RoutedEventArgs e)
+        {
+            LogoutRequested = true;
             Close();
         }
     }

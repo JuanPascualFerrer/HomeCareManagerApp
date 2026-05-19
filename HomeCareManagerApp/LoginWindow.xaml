@@ -5,13 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HomeCareManagerApp"
         mc:Ignorable="d"
-        Title="HomeCare Manager — Login"
+        Title="HomeCare Manager - Login"
         Height="520" Width="860"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
-        <!-- ── Tus colores originales, sin tocar ── -->
         <SolidColorBrush x:Key="BlueBrush"    Color="#1565C0" />
         <SolidColorBrush x:Key="BlueSoftBrush" Color="#F4F9FF" />
         <SolidColorBrush x:Key="TealBrush"    Color="#00897B" />
@@ -20,7 +19,6 @@
         <SolidColorBrush x:Key="MutedBrush"   Color="#5F6F8D" />
         <SolidColorBrush x:Key="BorderBrush"  Color="#D9E2EF" />
 
-        <!-- ── Tu NavButtonStyle original, sin tocar ── -->
         <Style x:Key="NavButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="#DCEBFF" />
@@ -51,7 +49,6 @@
             </Setter>
         </Style>
 
-        <!-- ── NUEVO: estilo para los campos de texto ── -->
         <Style x:Key="InputStyle" TargetType="TextBox">
             <Setter Property="Height" Value="42" />
             <Setter Property="FontSize" Value="14" />
@@ -84,7 +81,6 @@
             </Setter>
         </Style>
 
-        <!-- ── NUEVO: estilo para el campo de contraseña ── -->
         <Style x:Key="PasswordStyle" TargetType="PasswordBox">
             <Setter Property="Height" Value="42" />
             <Setter Property="FontSize" Value="14" />
@@ -117,7 +113,6 @@
             </Setter>
         </Style>
 
-        <!-- ── NUEVO: estilo para el botón principal ── -->
         <Style x:Key="PrimaryButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource BlueBrush}" />
             <Setter Property="Foreground" Value="White" />
@@ -151,26 +146,17 @@
     </Window.Resources>
 
 
-    <!-- ═══════════════════════════════════════════
-         LAYOUT: columna azul izquierda | formulario derecha
-    ════════════════════════════════════════════ -->
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="300" />
-            <!-- Panel de marca -->
             <ColumnDefinition Width="*"   />
-            <!-- Panel del formulario -->
         </Grid.ColumnDefinitions>
 
-        <!-- ─────────────────────────────────────
-             COLUMNA 0  —  Panel azul de marca
-        ───────────────────────────────────── -->
         <Grid Grid.Column="0" Background="{StaticResource BlueBrush}">
             <StackPanel VerticalAlignment="Center"
                         HorizontalAlignment="Center"
                         Margin="32,0">
 
-                <!-- Icono -->
                 <Border Width="64" Height="64"
                         CornerRadius="16"
                         Background="#FFFFFF20"
@@ -182,7 +168,6 @@
                                VerticalAlignment="Center" />
                 </Border>
 
-                <!-- Nombre de la app (tu TextBlock original, reubicado aquí) -->
                 <TextBlock Text="HomeCare"
                            Foreground="White"
                            FontSize="24"
@@ -193,7 +178,6 @@
                            FontWeight="Bold"
                            Margin="0,0,0,12" />
 
-                <!-- Descripción -->
                 <TextBlock Text="Desktop application for organising home care services."
                            Foreground="#FFFFFFA0"
                            FontSize="12"
@@ -202,15 +186,11 @@
             </StackPanel>
         </Grid>
 
-        <!-- ─────────────────────────────────────
-             COLUMNA 1  —  Formulario de login
-        ───────────────────────────────────── -->
         <Grid Grid.Column="1" Background="White">
             <StackPanel VerticalAlignment="Center"
                         Margin="50,0"
                         MaxWidth="320">
 
-                <!-- Título del formulario -->
                 <TextBlock Text="Welcome back"
                            FontSize="22"
                            FontWeight="Bold"
@@ -221,7 +201,6 @@
                            Foreground="{StaticResource MutedBrush}"
                            Margin="0,0,0,28" />
 
-                <!-- Email -->
                 <TextBlock Text="Email address"
                            FontSize="12"
                            FontWeight="SemiBold"
@@ -232,7 +211,6 @@
                          Margin="0,0,0,18"
                          KeyDown="Input_KeyDown" TextChanged="EmailTextBox_TextChanged" />
 
-                <!-- Contraseña -->
                 <TextBlock Text="Password"
                            FontSize="12"
                            FontWeight="SemiBold"
@@ -243,7 +221,6 @@
                              Margin="0,0,0,16"
                              KeyDown="Input_KeyDown"/>
 
-                <!-- Mensaje de error (oculto por defecto) -->
                 <Border x:Name="ErrorBorder"
                         CornerRadius="6"
                         Background="#FFEBEE"
@@ -258,7 +235,6 @@
                                TextWrapping="Wrap" />
                 </Border>
 
-                <!-- Botón Sign In -->
                 <Button x:Name="LoginButton"
                         Content="Sign In"
                         Style="{StaticResource PrimaryButtonStyle}"

@@ -42,7 +42,7 @@ namespace HomeCareManagerApp
             CurrentUserNameText.Text = currentUser.Name;
             CurrentUserEmailText.Text = currentUser.Email;
 
-            LoadSampleData();
+            LoadEmptyData();
             ReloadData(showMessages: false);
             SelectSection(DashboardNavButton);
             ApplyPermissions();
@@ -110,6 +110,13 @@ namespace HomeCareManagerApp
             };
 
             dialog.ShowDialog();
+
+            if (dialog.LogoutRequested)
+            {
+                LoginWindow loginWindow = new LoginWindow();
+                loginWindow.Show();
+                Close();
+            }
         }
 
         private void SaveTask_Click(object sender, RoutedEventArgs e)
@@ -126,30 +133,30 @@ namespace HomeCareManagerApp
 
             if (TaskPatientComboBox.SelectedItem is not PatientOption patient)
             {
-                MessageBox.Show("Selecciona un paciente.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Select a patient.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (TaskSkillComboBox.SelectedItem is not LookupOption skill)
             {
-                MessageBox.Show("Selecciona la habilidad requerida.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Select the required skill.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (TaskStatusComboBox.SelectedItem is not LookupOption status)
             {
-                MessageBox.Show("Selecciona el estado inicial.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Select the initial status.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             string description = TaskDescriptionTextBox.Text.Trim();
             if (string.IsNullOrWhiteSpace(description))
             {
-                MessageBox.Show("Escribe una descripcion para la tarea.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Enter a task description.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            string priority = (TaskPriorityComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Media";
+            string priority = (TaskPriorityComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Medium";
             DateTime date = TaskDatePicker.SelectedDate ?? DateTime.Today;
             string taskId = $"task-{Guid.NewGuid():N}".Substring(0, 18);
 
@@ -165,14 +172,14 @@ namespace HomeCareManagerApp
             if (!saved)
             {
                 MessageBox.Show(
-                    "No se ha podido guardar la tarea. Revisa que MySQL este abierto y que existan las claves relacionadas.",
+                    "The task could not be saved. Check that MySQL is running and related records exist.",
                     "HomeCare Manager",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
                 return;
             }
 
-            MessageBox.Show("Tarea guardada correctamente.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Task saved successfully.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Information);
             ReloadData(showMessages: false);
         }
 
@@ -204,22 +211,22 @@ namespace HomeCareManagerApp
                 dialog.PatientName,
                 dialog.Address,
                 dialog.Phone,
-                string.IsNullOrWhiteSpace(dialog.Notes) ? "Sin notas" : dialog.Notes,
+                string.IsNullOrWhiteSpace(dialog.Notes) ? "No notes" : dialog.Notes,
                 dialog.Priority,
-                string.IsNullOrWhiteSpace(dialog.EmergencyContact) ? "No indicado" : dialog.EmergencyContact,
+                string.IsNullOrWhiteSpace(dialog.EmergencyContact) ? "Not specified" : dialog.EmergencyContact,
                 dialog.Zone);
 
             if (!saved)
             {
                 MessageBox.Show(
-                    "No se ha podido guardar el paciente. Revisa que MySQL este abierto y que la tabla patients exista.",
+                    "The patient could not be saved. Check that MySQL is running and the patients table exists.",
                     "HomeCare Manager",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
                 return;
             }
 
-            MessageBox.Show("Paciente guardado correctamente.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Patient saved successfully.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Information);
             ReloadData(showMessages: false);
             SelectSection(PatientsNavButton);
         }
@@ -289,27 +296,137 @@ namespace HomeCareManagerApp
             SelectSection(AdminNavButton);
         }
 
-        private void ShowPendingIntegration_Click(object sender, RoutedEventArgs e)
+        private void EditUser_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(
-                "Esta accion sera la siguiente en conectarse a formularios completos de crear/editar.",
+            if ((sender as Button)?.CommandParameter is not UserRow user)
+            {
+                return;
+            }
+
+            User? existingUser = database.GetUserById(user.Id);
+
+            if (existingUser == null)
+            {
+                MessageBox.Show(
+                    "The selected user could not be loaded.",
+                    "HomeCare Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            EditUserEditor dialog = new EditUserEditor(existingUser, SkillOptions)
+            {
+                Owner = this
+            };
+
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            User? userWithEmail = database.GetUserByEmail(dialog.Email);
+            if (userWithEmail != null && !userWithEmail.UserId.Equals(existingUser.UserId, StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show(
+                    "A user with this email already exists.",
+                    "HomeCare Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            database.InsertRole(dialog.RoleId, dialog.RoleName);
+            database.InsertSkill(dialog.SkillId, dialog.SkillName);
+
+            existingUser.Name = dialog.UserName;
+            existingUser.Email = dialog.Email;
+            existingUser.RoleId = dialog.RoleId;
+            existingUser.SkillId = dialog.SkillId;
+            existingUser.IsActive = dialog.UserIsActive;
+
+            bool saved = database.UpdateUser(existingUser);
+
+            if (!saved)
+            {
+                MessageBox.Show(
+                    "The user could not be updated.",
+                    "HomeCare Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            if (existingUser.UserId.Equals(currentUser.UserId, StringComparison.OrdinalIgnoreCase))
+            {
+                currentUser.Name = existingUser.Name;
+                currentUser.Email = existingUser.Email;
+                currentUser.RoleId = existingUser.RoleId;
+                currentUser.SkillId = existingUser.SkillId;
+                currentUser.IsActive = existingUser.IsActive;
+                CurrentUserNameText.Text = currentUser.Name;
+                CurrentUserEmailText.Text = currentUser.Email;
+                ApplyPermissions();
+            }
+
+            ReloadData(showMessages: false);
+        }
+
+        private void DeleteUser_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as Button)?.CommandParameter is not UserRow user)
+            {
+                return;
+            }
+
+            if (user.Id.Equals(currentUser.UserId, StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show(
+                    "You cannot delete the user that is currently signed in.",
+                    "HomeCare Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            MessageBoxResult result = MessageBox.Show(
+                $"Delete user {user.Name}?",
                 "HomeCare Manager",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            bool deleted = database.DeleteUser(user.Id);
+
+            if (!deleted)
+            {
+                MessageBox.Show(
+                    "The user could not be deleted.",
+                    "HomeCare Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            ReloadData(showMessages: false);
         }
 
         private void ReloadData(bool showMessages)
         {
             if (!database.CanConnect())
             {
-                LoadSampleData();
-                ConnectionStatusText.Text = "MySQL no conectado - datos de ejemplo";
+                LoadEmptyData();
+                ConnectionStatusText.Text = "MySQL disconnected";
                 UpdateDashboardNumbers();
 
                 if (showMessages)
                 {
                     MessageBox.Show(
-                        "No se ha podido conectar a MySQL. La app mantiene datos de ejemplo para poder seguir trabajando en la interfaz.",
+                        "Could not connect to MySQL. Data is unavailable until the database connection is restored.",
                         "HomeCare Manager",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
@@ -352,73 +469,43 @@ namespace HomeCareManagerApp
                 incident.CreatedAt)));
 
             ReplaceItems(Users, users.Select(user => new UserRow(
+                user.UserId,
                 user.Name,
+                user.Email,
                 user.RoleName,
-                user.IsActive ? "Si" : "No")));
+                user.IsActive ? "Yes" : "No")));
 
             ReplaceItems(SkillOptions, skills.Select(skill => new LookupOption(skill.SkillId, skill.Name)));
             ReplaceItems(StatusOptions, statuses.Select(status => new LookupOption(status.StatusId, status.Name)));
 
-            EnsureFallbackOptions();
             SelectFirstOptions();
-            ConnectionStatusText.Text = "Conectado a MySQL";
+            ConnectionStatusText.Text = "Connected to MySQL";
             UpdateDashboardNumbers();
 
             if (showMessages)
             {
-                MessageBox.Show("Datos sincronizados correctamente.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Data synced successfully.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
-        private void LoadSampleData()
+        private void LoadEmptyData()
         {
-            ReplaceItems(Patients, new[]
-            {
-                new PatientRow("patient-sample-1", "Maria Lopez", "Zona Norte", "Alta", "600 112 233", "Calle Mayor 18", "Seguimiento diario de medicacion"),
-                new PatientRow("patient-sample-2", "Luis Martin", "Centro", "Media", "600 445 677", "Plaza Nueva 4", "Revision semanal de constantes"),
-                new PatientRow("patient-sample-3", "Ana Ruiz", "Zona Este", "Media", "600 889 100", "Avenida del Parque 22", "Apoyo en movilidad"),
-                new PatientRow("patient-sample-4", "Carlos Vega", "Zona Norte", "Baja", "600 224 118", "Calle Luna 7", "Visitas puntuales")
-            });
+            ReplaceItems(Patients, Array.Empty<PatientRow>());
 
             ReplaceItems(PatientOptions, Patients.Select(patient => new PatientOption(patient.Id, patient.Name)));
 
-            ReplaceItems(Tasks, new[]
-            {
-                new TaskRow("task-sample-1", "Administrar medicacion", "Maria Lopez", "Zona Norte", "Alta", "Pendiente", DateTime.Today),
-                new TaskRow("task-sample-2", "Revision de constantes", "Luis Martin", "Centro", "Media", "Aceptada", DateTime.Today),
-                new TaskRow("task-sample-3", "Apoyo en movilidad", "Ana Ruiz", "Zona Este", "Media", "Disponible", DateTime.Today.AddDays(1))
-            });
+            ReplaceItems(Tasks, Array.Empty<TaskRow>());
 
-            ReplaceItems(Incidents, new[]
-            {
-                new IncidentRow("Maria Lopez", "Administrar medicacion", "Abierta", DateTime.Today.AddHours(9)),
-                new IncidentRow("Ana Ruiz", "Apoyo en movilidad", "En revision", DateTime.Today.AddHours(11))
-            });
+            ReplaceItems(Incidents, Array.Empty<IncidentRow>());
 
-            ReplaceItems(Users, new[]
-            {
-                new UserRow("Carmen Diaz", "Cuidador", "Si"),
-                new UserRow("Pablo Sanz", "Cuidador", "Si"),
-                new UserRow("Laura Gil", "Admin", "Si"),
-                new UserRow("Mario Perez", "Cuidador", "No")
-            });
+            ReplaceItems(Users, Array.Empty<UserRow>());
 
-            ReplaceItems(SkillOptions, new[]
-            {
-                new LookupOption("skill-basic", "Cuidados basicos"),
-                new LookupOption("skill-medication", "Medicacion"),
-                new LookupOption("skill-mobility", "Movilidad")
-            });
+            ReplaceItems(SkillOptions, Array.Empty<LookupOption>());
 
-            ReplaceItems(StatusOptions, new[]
-            {
-                new LookupOption("pending", "Pendiente"),
-                new LookupOption("available", "Disponible"),
-                new LookupOption("accepted", "Aceptada")
-            });
+            ReplaceItems(StatusOptions, Array.Empty<LookupOption>());
 
             SelectFirstOptions();
-            ConnectionStatusText.Text = "Datos de ejemplo";
+            ConnectionStatusText.Text = "Disconnected";
             UpdateDashboardNumbers();
         }
 
@@ -428,24 +515,6 @@ namespace HomeCareManagerApp
             foreach (T item in items)
             {
                 target.Add(item);
-            }
-        }
-
-        private void EnsureFallbackOptions()
-        {
-            if (PatientOptions.Count == 0)
-            {
-                ReplaceItems(PatientOptions, Patients.Select(patient => new PatientOption(patient.Id, patient.Name)));
-            }
-
-            if (SkillOptions.Count == 0)
-            {
-                SkillOptions.Add(new LookupOption("skill-basic", "Cuidados basicos"));
-            }
-
-            if (StatusOptions.Count == 0)
-            {
-                StatusOptions.Add(new LookupOption("pending", "Pendiente"));
             }
         }
 
@@ -462,27 +531,25 @@ namespace HomeCareManagerApp
         {
             int highPriorityPatients = Patients.Count(patient => IsHighPriority(patient.Priority));
             int pendingTasks = Tasks.Count(task => IsPending(task.Status));
-            int activeUsers = Users.Count(user => user.Active.Equals("Si", StringComparison.OrdinalIgnoreCase));
+            int activeUsers = Users.Count(user => user.Active.Equals("Yes", StringComparison.OrdinalIgnoreCase));
 
             PatientCountText.Text = Patients.Count.ToString();
-            PatientMetaText.Text = $"{highPriorityPatients} con prioridad alta";
+            PatientMetaText.Text = $"{highPriorityPatients} high priority";
             TaskCountText.Text = Tasks.Count.ToString();
-            TaskMetaText.Text = $"{pendingTasks} pendientes";
+            TaskMetaText.Text = $"{pendingTasks} pending";
             UserCountText.Text = activeUsers.ToString();
-            UserMetaText.Text = $"{Users.Count} usuarios registrados";
+            UserMetaText.Text = $"{Users.Count} registered users";
             IncidentCountText.Text = Incidents.Count.ToString();
         }
 
         private static bool IsHighPriority(string priority)
         {
-            return priority.Equals("Alta", StringComparison.OrdinalIgnoreCase)
-                || priority.Equals("High", StringComparison.OrdinalIgnoreCase);
+            return priority.Equals("High", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool IsPending(string status)
         {
-            return status.Equals("Pendiente", StringComparison.OrdinalIgnoreCase)
-                || status.Equals("Pending", StringComparison.OrdinalIgnoreCase);
+            return status.Equals("Pending", StringComparison.OrdinalIgnoreCase);
         }
 
         private void SelectSection(Button selectedButton)
@@ -509,23 +576,23 @@ namespace HomeCareManagerApp
             {
                 case nameof(PatientsNavButton):
                     PatientsView.Visibility = Visibility.Visible;
-                    PageSubtitleText.Text = "Busqueda, registro y seguimiento de pacientes";
+                    PageSubtitleText.Text = "Patient registration and tracking";
                     break;
                 case nameof(TasksNavButton):
                     TasksView.Visibility = Visibility.Visible;
-                    PageSubtitleText.Text = "Creacion, asignacion y control de tareas";
+                    PageSubtitleText.Text = "Task creation, assignment, and monitoring";
                     break;
                 case nameof(IncidentsNavButton):
                     IncidentsView.Visibility = Visibility.Visible;
-                    PageSubtitleText.Text = "Gestion de incidencias y trazabilidad";
+                    PageSubtitleText.Text = "Incident management and traceability";
                     break;
                 case nameof(AdminNavButton):
                     AdminView.Visibility = Visibility.Visible;
-                    PageSubtitleText.Text = "Usuarios, roles y preparacion de integracion";
+                    PageSubtitleText.Text = "Users and roles";
                     break;
                 default:
                     DashboardView.Visibility = Visibility.Visible;
-                    PageSubtitleText.Text = "Resumen operativo del servicio de atencion domiciliaria";
+                    PageSubtitleText.Text = "Operational overview for home care services";
                     break;
             }
         }
@@ -541,13 +608,13 @@ namespace HomeCareManagerApp
 
     public record TaskRow(string Id, string Description, string PatientName, string PatientZone, string Priority, string Status, DateTime Date)
     {
-        public string Summary => $"Paciente: {PatientName} - {PatientZone}";
+        public string Summary => $"Patient: {PatientName} - {PatientZone}";
         public string StatusLine => $"{Status} - {Description}";
     }
 
     public record IncidentRow(string Patient, string Task, string Status, DateTime CreatedAt);
 
-    public record UserRow(string Name, string Role, string Active);
+    public record UserRow(string Id, string Name, string Email, string Role, string Active);
 
     public record PatientOption(string Id, string Name);
 

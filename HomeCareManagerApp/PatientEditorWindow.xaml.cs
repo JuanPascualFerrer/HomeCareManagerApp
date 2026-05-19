@@ -9,7 +9,7 @@ namespace HomeCareManagerApp
         public string Address => AddressTextBox.Text.Trim();
         public string Phone => PhoneTextBox.Text.Trim();
         public string Zone => ZoneTextBox.Text.Trim();
-        public string Priority => (PriorityComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Media";
+        public string Priority => (PriorityComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "Medium";
         public string EmergencyContact => EmergencyContactTextBox.Text.Trim();
         public string Notes => NotesTextBox.Text.Trim();
 
@@ -22,25 +22,25 @@ namespace HomeCareManagerApp
         {
             if (string.IsNullOrWhiteSpace(PatientName))
             {
-                MessageBox.Show("El nombre es obligatorio.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Name is required.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(Address))
             {
-                MessageBox.Show("La direccion es obligatoria.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Address is required.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(Phone))
             {
-                MessageBox.Show("El telefono es obligatorio.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Phone is required.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(Zone))
             {
-                MessageBox.Show("La zona es obligatoria.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Zone is required.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

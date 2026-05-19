@@ -42,6 +42,11 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+            <Setter Property="Background" Value="#E3F2FD" />
+            <Setter Property="Foreground" Value="#1565C0" />
+        </Style>
     </Window.Resources>
 
     <Grid Margin="24">
@@ -68,6 +73,12 @@
                     CornerRadius="8"
                     Padding="20">
                 <StackPanel>
+                    <Button Content="Log out"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            HorizontalAlignment="Right"
+                            Margin="0,0,0,16"
+                            Click="Logout_Click" />
+
                     <TextBlock Text="Name" Style="{StaticResource FieldLabelStyle}" />
                     <TextBlock x:Name="NameTextBlock"
                                Foreground="{StaticResource TextBrush}"

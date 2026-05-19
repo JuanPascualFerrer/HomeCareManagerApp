@@ -46,7 +46,7 @@ namespace HomeCareManagerApp
 
             if (user == null)
             {
-                ErrorText.Text = "Email o contraseña incorrectos.";
+                ErrorText.Text = "Invalid email or password.";
                 ErrorBorder.Visibility = Visibility.Visible;
                 return;
             }

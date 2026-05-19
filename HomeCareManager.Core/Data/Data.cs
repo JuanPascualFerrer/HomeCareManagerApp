@@ -158,7 +158,7 @@ namespace HomeCareManager.Core.Data
         {
             if (RecordExists(tableName, idColumn, idValue))
             {
-                Console.WriteLine($"No se puede insertar: ya existe un registro en {tableName} con {idColumn} = {idValue}");
+                Console.WriteLine($"Insert skipped: a record already exists in {tableName} with {idColumn} = {idValue}");
                 return false;
             }
 
@@ -174,7 +174,7 @@ namespace HomeCareManager.Core.Data
         {
             if (!RecordExists(tableName, idColumn, idValue))
             {
-                Console.WriteLine($"No se puede actualizar: no existe un registro en {tableName} con {idColumn} = {idValue}");
+                Console.WriteLine($"Update skipped: no record exists in {tableName} with {idColumn} = {idValue}");
                 return false;
             }
 
@@ -190,7 +190,7 @@ namespace HomeCareManager.Core.Data
         {
             if (!RecordExists(tableName, idColumn, idValue))
             {
-                Console.WriteLine($"No se puede borrar: no existe un registro en {tableName} con {idColumn} = {idValue}");
+                Console.WriteLine($"Delete skipped: no record exists in {tableName} with {idColumn} = {idValue}");
                 return false;
             }
 
@@ -209,14 +209,14 @@ namespace HomeCareManager.Core.Data
         {
             if (string.IsNullOrWhiteSpace(identifier))
             {
-                throw new ArgumentException("El identificador SQL no puede estar vacio.", nameof(identifier));
+                throw new ArgumentException("SQL identifier cannot be empty.", nameof(identifier));
             }
 
             foreach (char character in identifier)
             {
                 if (!char.IsLetterOrDigit(character) && character != '_')
                 {
-                    throw new ArgumentException($"Identificador SQL no valido: {identifier}", nameof(identifier));
+                    throw new ArgumentException($"Invalid SQL identifier: {identifier}", nameof(identifier));
                 }
             }
         }
@@ -353,6 +353,28 @@ namespace HomeCareManager.Core.Data
                 CreatedAt = reader.GetDateTime("CreatedAt"),
                 SkillId = reader.GetString("SkillId")
             }, ("@email", email));
+
+            return users.FirstOrDefault();
+        }
+
+        public User? GetUserById(string userId)
+        {
+            const string query =
+                "SELECT UserId, Name, RoleId, Email, PasswordHash, PasswordChanged, IsActive, CreatedAt, SkillId " +
+                "FROM users WHERE UserId = @userId LIMIT 1;";
+
+            List<User> users = ExecuteReader(query, reader => new User
+            {
+                UserId = reader.GetString("UserId"),
+                Name = reader.GetString("Name"),
+                RoleId = reader.GetString("RoleId"),
+                Email = reader.GetString("Email"),
+                PasswordHash = reader.GetString("PasswordHash"),
+                PasswordChanged = reader.GetBoolean("PasswordChanged"),
+                IsActive = reader.GetBoolean("IsActive"),
+                CreatedAt = reader.GetDateTime("CreatedAt"),
+                SkillId = reader.GetString("SkillId")
+            }, ("@userId", userId));
 
             return users.FirstOrDefault();
         }
@@ -861,7 +883,7 @@ namespace HomeCareManager.Core.Data
 
         public List<UserSummary> GetUserSummaries()
         {
-            const string query = "SELECT u.UserId, u.Name, u.IsActive, COALESCE(r.RoleName, u.RoleId) AS RoleName " +
+            const string query = "SELECT u.UserId, u.Name, u.Email, u.IsActive, COALESCE(r.RoleName, u.RoleId) AS RoleName " +
                 "FROM users u " +
                 "LEFT JOIN roles r ON r.RoleId = u.RoleId " +
                 "ORDER BY u.Name;";
@@ -870,6 +892,7 @@ namespace HomeCareManager.Core.Data
             {
                 UserId = reader.GetString("UserId"),
                 Name = reader.GetString("Name"),
+                Email = reader.GetString("Email"),
                 RoleName = reader.GetString("RoleName"),
                 IsActive = reader.GetBoolean("IsActive")
             });
@@ -952,7 +975,7 @@ namespace HomeCareManager.Core.Data
         {
             return ExecuteCount("SELECT COUNT(*) FROM tasks t " +
                 "LEFT JOIN task_status ts ON ts.StatusId = t.StatusId " +
-                "WHERE LOWER(COALESCE(ts.Name, t.StatusId)) IN ('pending', 'pendiente');");
+                "WHERE LOWER(COALESCE(ts.Name, t.StatusId)) = 'pending';");
         }
 
         public int CountActiveUsers()
@@ -963,7 +986,7 @@ namespace HomeCareManager.Core.Data
         public int CountOpenIncidents()
         {
             return ExecuteCount("SELECT COUNT(*) FROM incidents " +
-                "WHERE LOWER(Status) NOT IN ('closed', 'cerrada', 'cerrado', 'resuelta', 'resuelto');");
+                "WHERE LOWER(Status) NOT IN ('closed', 'resolved');");
         }
     }
 }
