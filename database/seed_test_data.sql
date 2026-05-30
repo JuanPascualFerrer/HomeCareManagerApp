@@ -110,6 +110,11 @@ CREATE TABLE IF NOT EXISTS incidents (
   Description TEXT NOT NULL,
   CreatedAt DATETIME NOT NULL,
   Status VARCHAR(50) NOT NULL,
+  Severity VARCHAR(20) NOT NULL DEFAULT 'Medium',
+  ResolutionNotes TEXT NULL,
+  ResolvedAt DATETIME NULL,
+  AssignedToUserId VARCHAR(50) NULL,
+  ReportId VARCHAR(50) NULL,
   PRIMARY KEY (IncidentId),
   INDEX IX_incidents_UserId (UserId),
   INDEX IX_incidents_TaskId (TaskId),
@@ -120,6 +125,36 @@ CREATE TABLE IF NOT EXISTS incidents (
     FOREIGN KEY (TaskId) REFERENCES tasks (TaskId)
     ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP PROCEDURE IF EXISTS add_incident_column_if_missing;
+DELIMITER //
+CREATE PROCEDURE add_incident_column_if_missing(
+  IN column_name VARCHAR(64),
+  IN column_definition TEXT
+)
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'incidents'
+      AND COLUMN_NAME = column_name
+  ) THEN
+    SET @ddl = CONCAT('ALTER TABLE incidents ADD COLUMN ', column_definition);
+    PREPARE stmt FROM @ddl;
+    EXECUTE stmt;
+    DEALLOCATE PREPARE stmt;
+  END IF;
+END//
+DELIMITER ;
+
+CALL add_incident_column_if_missing('Severity', 'Severity VARCHAR(20) NOT NULL DEFAULT ''Medium'' AFTER Status');
+CALL add_incident_column_if_missing('ResolutionNotes', 'ResolutionNotes TEXT NULL AFTER Severity');
+CALL add_incident_column_if_missing('ResolvedAt', 'ResolvedAt DATETIME NULL AFTER ResolutionNotes');
+CALL add_incident_column_if_missing('AssignedToUserId', 'AssignedToUserId VARCHAR(50) NULL AFTER ResolvedAt');
+CALL add_incident_column_if_missing('ReportId', 'ReportId VARCHAR(50) NULL AFTER AssignedToUserId');
+
+DROP PROCEDURE IF EXISTS add_incident_column_if_missing;
 
 CREATE TABLE IF NOT EXISTS reports (
   ReportId VARCHAR(50) NOT NULL,
@@ -177,6 +212,8 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO task_status (StatusId, Name) VALUES
   ('pending', 'Pending'),
   ('assigned', 'Assigned'),
+  ('accepted', 'Accepted'),
+  ('rejected', 'Rejected'),
   ('in-progress', 'In Progress'),
   ('completed', 'Completed'),
   ('cancelled', 'Cancelled')
@@ -221,7 +258,7 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO tasks
   (RequiredSkillId, TaskId, PatientId, Description, `Date`, Priority, StatusId)
 VALUES
-  ('skill-doctor', 'task-med-001', 'pat-maria-lopez', 'Review glucose records and adjust care plan.', '2026-05-27 10:00:00', 'High', 'pending'),
+  ('skill-doctor', 'task-med-001', 'pat-maria-lopez', 'Review glucose records and adjust care plan.', '2026-05-27 10:00:00', 'High', 'assigned'),
   ('skill-assistant', 'task-asst-001', 'pat-carmen-ruiz', 'Morning hygiene support and breakfast supervision.', '2026-05-27 08:30:00', 'High', 'assigned'),
   ('skill-nurse', 'task-nurse-001', 'pat-elena-torres', 'Blood pressure check and medication confirmation.', '2026-05-28 11:00:00', 'Medium', 'in-progress'),
   ('skill-physio', 'task-physio-001', 'pat-antonio-m', 'Guided lower-body mobility session.', '2026-05-29 16:00:00', 'Low', 'completed'),
@@ -234,14 +271,16 @@ ON DUPLICATE KEY UPDATE
   Priority = VALUES(Priority),
   StatusId = VALUES(StatusId);
 
+DELETE FROM task_assignments
+WHERE AssignmentId = 'assign-005';
+
 INSERT INTO task_assignments
   (UserId, TaskId, AssignmentId, AssignedDate, StatusId)
 VALUES
-  ('u-doctor-test', 'task-med-001', 'assign-001', '2026-05-26 14:00:00', 'pending'),
+  ('u-doctor-test', 'task-med-001', 'assign-001', '2026-05-26 14:00:00', 'assigned'),
   ('u-assist-test', 'task-asst-001', 'assign-002', '2026-05-26 15:00:00', 'assigned'),
   ('u-nurse-test', 'task-nurse-001', 'assign-003', '2026-05-26 16:00:00', 'in-progress'),
-  ('u-physio-test', 'task-physio-001', 'assign-004', '2026-05-25 09:00:00', 'completed'),
-  ('u-assist-test', 'task-asst-002', 'assign-005', '2026-05-27 09:00:00', 'pending')
+  ('u-physio-test', 'task-physio-001', 'assign-004', '2026-05-25 09:00:00', 'completed')
 ON DUPLICATE KEY UPDATE
   UserId = VALUES(UserId),
   TaskId = VALUES(TaskId),
@@ -249,18 +288,23 @@ ON DUPLICATE KEY UPDATE
   StatusId = VALUES(StatusId);
 
 INSERT INTO incidents
-  (UserId, IncidentId, TaskId, Description, CreatedAt, Status)
+  (UserId, IncidentId, TaskId, Description, CreatedAt, Status, Severity, ResolutionNotes, ResolvedAt, AssignedToUserId, ReportId)
 VALUES
-  ('u-assist-test', 'incident-001', 'task-asst-001', 'Patient reported dizziness before breakfast.', '2026-05-27 08:45:00', 'Open'),
-  ('u-doctor-test', 'incident-002', 'task-med-001', 'Glucose reading above expected range.', '2026-05-27 10:20:00', 'In review'),
-  ('u-physio-test', 'incident-003', 'task-physio-001', 'Minor knee discomfort after exercise.', '2026-05-29 16:45:00', 'Resolved'),
-  ('u-assist-test', 'incident-004', 'task-asst-002', 'Access code did not work on first visit.', '2026-05-30 19:15:00', 'Closed')
+  ('u-assist-test', 'incident-001', 'task-asst-001', 'Patient reported dizziness before breakfast.', '2026-05-27 08:45:00', 'Open', 'High', '', NULL, 'u-doctor-test', 'report-002'),
+  ('u-doctor-test', 'incident-002', 'task-med-001', 'Glucose reading above expected range.', '2026-05-27 10:20:00', 'In review', 'Critical', '', NULL, 'u-doctor-test', 'report-003'),
+  ('u-physio-test', 'incident-003', 'task-physio-001', 'Minor knee discomfort after exercise.', '2026-05-29 16:45:00', 'Resolved', 'Low', 'No further action required after observation.', '2026-05-29 17:10:00', 'u-physio-test', 'report-001'),
+  ('u-assist-test', 'incident-004', 'task-asst-002', 'Access code did not work on first visit.', '2026-05-30 19:15:00', 'Closed', 'Medium', 'Access code updated for future visits.', '2026-05-30 19:40:00', 'u-assist-test', NULL)
 ON DUPLICATE KEY UPDATE
   UserId = VALUES(UserId),
   TaskId = VALUES(TaskId),
   Description = VALUES(Description),
   CreatedAt = VALUES(CreatedAt),
-  Status = VALUES(Status);
+  Status = VALUES(Status),
+  Severity = VALUES(Severity),
+  ResolutionNotes = VALUES(ResolutionNotes),
+  ResolvedAt = VALUES(ResolvedAt),
+  AssignedToUserId = VALUES(AssignedToUserId),
+  ReportId = VALUES(ReportId);
 
 INSERT INTO reports
   (ReportId, UserId, Notes, CreatedAt, StatusBefore, StatusAfter, Duration, TaskId)
@@ -283,7 +327,8 @@ VALUES
   ('avail-001', '2026-05-27 08:00:00', 'Centro', '2026-05-27 14:00:00', 'u-doctor-test'),
   ('avail-002', '2026-05-27 08:00:00', 'Salamanca', '2026-05-27 16:00:00', 'u-assist-test'),
   ('avail-003', '2026-05-28 09:00:00', 'Arganzuela', '2026-05-28 15:00:00', 'u-nurse-test'),
-  ('avail-004', '2026-05-29 12:00:00', 'Tetuan', '2026-05-29 18:00:00', 'u-physio-test')
+  ('avail-004', '2026-05-29 12:00:00', 'Tetuan', '2026-05-29 18:00:00', 'u-physio-test'),
+  ('avail-005', '2026-05-30 18:00:00', 'Chamartin', '2026-05-30 22:00:00', 'u-assist-test')
 ON DUPLICATE KEY UPDATE
   StartTime = VALUES(StartTime),
   Zone = VALUES(Zone),

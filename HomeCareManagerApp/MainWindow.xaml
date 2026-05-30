@@ -238,8 +238,8 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <UniformGrid Columns="4">
-                            <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,14,0">
+                        <UniformGrid x:Name="DashboardStatsGrid" Columns="4">
+                            <Border x:Name="AssistantsDashboardCard" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,14,0">
                                 <StackPanel>
                                     <TextBlock Text="Active patients" Foreground="{StaticResource MutedBrush}" />
                                     <TextBlock x:Name="PatientCountText" Text="0" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,8,0,0" />
@@ -260,7 +260,7 @@
                                     <TextBlock x:Name="UserMetaText" Text="Active users" Foreground="{StaticResource TealBrush}" FontSize="12" />
                                 </StackPanel>
                             </Border>
-                            <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18">
+                            <Border x:Name="IncidentsDashboardCard" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="18">
                                 <StackPanel>
                                     <TextBlock Text="Incidents" Foreground="{StaticResource MutedBrush}" />
                                     <TextBlock x:Name="IncidentCountText" Text="0" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,8,0,0" />
@@ -271,25 +271,39 @@
 
                         <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                             <StackPanel>
-                                <TextBlock Text="Today's tasks" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
+                                <TextBlock Text="Pending tasks" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
                                 <ListView Margin="0,14,0,0"
                                           BorderThickness="0"
-                                          ItemsSource="{Binding Tasks}">
+                                          ItemsSource="{Binding DashboardTasks}">
                                     <ListView.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid Margin="0,8">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <StackPanel>
-                                                    <TextBlock Text="{Binding Description}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                                                    <TextBlock Text="{Binding Summary}" Foreground="{StaticResource MutedBrush}" FontSize="12" />
-                                                </StackPanel>
-                                                <Border Grid.Column="1" Background="#E3F2FD" CornerRadius="8" Padding="10,4">
-                                                    <TextBlock Text="{Binding Priority}" Foreground="{StaticResource BlueBrush}" FontWeight="SemiBold" />
-                                                </Border>
-                                            </Grid>
+                                            <Button CommandParameter="{Binding}"
+                                                    Click="OpenTaskDetail_Click"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    Background="Transparent"
+                                                    BorderThickness="0"
+                                                    Padding="0"
+                                                    Cursor="Hand">
+                                                <Grid Margin="0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Description}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
+                                                        <TextBlock Text="{Binding Summary}" Foreground="{StaticResource MutedBrush}" FontSize="12" />
+                                                    </StackPanel>
+                                                    <Border Grid.Column="1"
+                                                            Background="{Binding DashboardStatusBackground}"
+                                                            CornerRadius="8"
+                                                            Padding="10,4"
+                                                            VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding DashboardStatusLabel}"
+                                                                   Foreground="{Binding DashboardStatusForeground}"
+                                                                   FontWeight="SemiBold" />
+                                                    </Border>
+                                                </Grid>
+                                            </Button>
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>
@@ -357,20 +371,147 @@
                     </Grid>
 
                     <Grid x:Name="TasksView" Visibility="Collapsed">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1.15*" />
-                            <ColumnDefinition Width="18" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+                        <Border Background="White"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="20"
+                                MinHeight="520">
+                            <DockPanel LastChildFill="True">
+                                <Grid DockPanel.Dock="Top" Margin="0,0,0,14">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Text="Task status"
+                                               Style="{StaticResource SectionTitleStyle}"
+                                               FontSize="20"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock x:Name="TaskResultCountText"
+                                               Grid.Column="1"
+                                               Text="0 tasks"
+                                               Foreground="{StaticResource MutedBrush}"
+                                               VerticalAlignment="Center" />
+
+                                    <WrapPanel Grid.Row="1"
+                                               Grid.ColumnSpan="2"
+                                               Margin="0,14,0,0">
+                                        <StackPanel Width="220" Margin="0,0,14,0">
+                                            <TextBlock Text="Patient" Style="{StaticResource FieldLabelStyle}" />
+                                            <ComboBox x:Name="TaskPatientFilterComboBox"
+                                                      Height="34"
+                                                      DisplayMemberPath="Name"
+                                                      ItemsSource="{Binding TaskFilterPatientOptions}"
+                                                      SelectionChanged="TaskFilter_Changed" />
+                                        </StackPanel>
+                                        <StackPanel Width="170" Margin="0,0,14,0">
+                                            <TextBlock Text="Assignment" Style="{StaticResource FieldLabelStyle}" />
+                                            <ComboBox x:Name="TaskAssignmentFilterComboBox"
+                                                      Height="34"
+                                                      SelectedIndex="0"
+                                                      SelectionChanged="TaskFilter_Changed">
+                                                <ComboBoxItem Content="All" Tag="all" />
+                                                <ComboBoxItem Content="Assigned" Tag="assigned" />
+                                                <ComboBoxItem Content="Unassigned" Tag="unassigned" />
+                                            </ComboBox>
+                                        </StackPanel>
+                                        <StackPanel Width="190">
+                                            <TextBlock Text="Sort" Style="{StaticResource FieldLabelStyle}" />
+                                            <ComboBox x:Name="TaskSortComboBox"
+                                                      Height="34"
+                                                      SelectedIndex="0"
+                                                      SelectionChanged="TaskFilter_Changed">
+                                                <ComboBoxItem Content="Date newest" Tag="date-desc" />
+                                                <ComboBoxItem Content="Date oldest" Tag="date-asc" />
+                                                <ComboBoxItem Content="Priority high first" Tag="priority-desc" />
+                                                <ComboBoxItem Content="Priority low first" Tag="priority-asc" />
+                                            </ComboBox>
+                                        </StackPanel>
+                                    </WrapPanel>
+                                </Grid>
+
+                                <DataGrid AutoGenerateColumns="False"
+                                          HeadersVisibility="Column"
+                                          CanUserAddRows="False"
+                                          CanUserSortColumns="False"
+                                          IsReadOnly="True"
+                                          ItemsSource="{Binding VisibleTasks}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2.4*" />
+                                        <DataGridTextColumn Header="Patient" Binding="{Binding PatientName}" Width="1.3*" />
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="1*" />
+                                        <DataGridTextColumn Header="Assigned to" Binding="{Binding AssignmentDisplay}" Width="1.2*" />
+                                        <DataGridTextColumn Header="Priority" Binding="{Binding Priority}" Width="0.8*" />
+                                        <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat=d}" Width="0.9*" />
+                                        <DataGridTemplateColumn Header="Actions" Width="300">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                        <Button Content="Edit"
+                                                                Style="{StaticResource GridActionButtonStyle}"
+                                                                CommandParameter="{Binding}"
+                                                                Click="EditTask_Click"
+                                                                Visibility="{Binding EditActionVisibility}" />
+                                                        <Button Content="{Binding AssignAction}"
+                                                                Style="{StaticResource GridActionButtonStyle}"
+                                                                CommandParameter="{Binding}"
+                                                                Click="AssignTask_Click"
+                                                                Visibility="{Binding AssignActionVisibility}" />
+                                                        <Button Content="Accept"
+                                                                Style="{StaticResource GridActionButtonStyle}"
+                                                                CommandParameter="{Binding}"
+                                                                Click="AcceptTask_Click"
+                                                                Visibility="{Binding AcceptActionVisibility}" />
+                                                        <Button Content="Reject"
+                                                                Style="{StaticResource GridActionButtonStyle}"
+                                                                CommandParameter="{Binding}"
+                                                                Click="RejectTask_Click"
+                                                                Visibility="{Binding RejectActionVisibility}" />
+                                                        <Button Content="Complete"
+                                                                Style="{StaticResource GridActionButtonStyle}"
+                                                                CommandParameter="{Binding}"
+                                                                Click="CompleteTask_Click"
+                                                                Visibility="{Binding CompleteActionVisibility}" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DockPanel>
+                        </Border>
 
                         <Border x:Name="CreateTaskPanel"
-                            Background="White"
-                            BorderBrush="{StaticResource BorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="8"
-                            Padding="20">
+                                Visibility="Collapsed"
+                                Background="White"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="20"
+                                Width="440"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top">
                             <StackPanel>
-                                <TextBlock Text="Create task" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="TaskEditorTitleText"
+                                               Text="Create task"
+                                               Style="{StaticResource SectionTitleStyle}"
+                                               FontSize="18"
+                                               VerticalAlignment="Center" />
+                                    <Button Grid.Column="1"
+                                            Content="Cancel"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Click="CancelCreateTask_Click" />
+                                </Grid>
                                 <TextBlock Text="Patient" Style="{StaticResource FieldLabelStyle}" Margin="0,18,0,2" />
                                 <ComboBox x:Name="TaskPatientComboBox"
                                           Height="36"
@@ -405,43 +546,19 @@
                                           Height="36"
                                           DisplayMemberPath="Name"
                                           ItemsSource="{Binding SkillOptions}" />
-                                <TextBlock Text="Initial status" Style="{StaticResource FieldLabelStyle}" Margin="0,12,0,2" />
+                                <TextBlock x:Name="TaskStatusLabelText"
+                                           Text="Initial status"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Margin="0,12,0,2" />
                                 <ComboBox x:Name="TaskStatusComboBox"
                                           Height="36"
                                           DisplayMemberPath="Name"
                                           ItemsSource="{Binding StatusOptions}" />
-                                <Button Content="Save task" Style="{StaticResource PrimaryButtonStyle}" Margin="0,18,0,0" Click="SaveTask_Click" />
-                            </StackPanel>
-                        </Border>
-
-                        <Border Grid.Column="2" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
-                            <StackPanel>
-                                <TextBlock Text="Task status" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
-                                <DataGrid Margin="0,14,0,0"
-                                          AutoGenerateColumns="False"
-                                          HeadersVisibility="Column"
-                                          CanUserAddRows="False"
-                                          ItemsSource="{Binding Tasks}">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*" />
-                                        <DataGridTextColumn Header="Patient" Binding="{Binding PatientName}" Width="1.2*" />
-                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100" />
-                                        <DataGridTextColumn Header="Priority" Binding="{Binding Priority}" Width="80" />
-                                        <DataGridTemplateColumn Header="Actions" Width="80">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                                        <Button Content="Assign"
-                                                                Style="{StaticResource GridActionButtonStyle}"
-                                                                CommandParameter="{Binding}"
-                                                                Click="AssignTask_Click"
-                                                                Visibility="{Binding ElementName=NewTaskButton, Path=Visibility}" />
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                    </DataGrid.Columns>
-                                </DataGrid>
+                                <Button x:Name="SaveTaskButton"
+                                        Content="Save task"
+                                        Style="{StaticResource PrimaryButtonStyle}"
+                                        Margin="0,18,0,0"
+                                        Click="SaveTask_Click" />
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -449,14 +566,112 @@
                     <Grid x:Name="IncidentsView" Visibility="Collapsed">
                         <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                             <StackPanel>
-                                <TextBlock Text="Open incidents" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
-                                <DataGrid AutoGenerateColumns="False" HeadersVisibility="Column" CanUserAddRows="False" Margin="0,14,0,0" ItemsSource="{Binding Incidents}">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Patient" Binding="{Binding Patient}" Width="*" />
-                                        <DataGridTextColumn Header="Task" Binding="{Binding Task}" Width="*" />
-                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120" />
-                                    </DataGrid.Columns>
-                                </DataGrid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Incident follow-up" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
+                                        <TextBlock x:Name="IncidentResultCountText"
+                                                   Text="0 incidents"
+                                                   Foreground="{StaticResource MutedBrush}"
+                                                   Margin="0,4,0,0" />
+                                    </StackPanel>
+                                    <ComboBox x:Name="IncidentStatusFilterComboBox"
+                                              Grid.Column="1"
+                                              Width="160"
+                                              Height="34"
+                                              SelectedIndex="0"
+                                              SelectionChanged="IncidentFilter_Changed">
+                                        <ComboBoxItem Content="Active" Tag="active" />
+                                        <ComboBoxItem Content="Open" Tag="open" />
+                                        <ComboBoxItem Content="In review" Tag="in-review" />
+                                        <ComboBoxItem Content="Resolved" Tag="resolved" />
+                                        <ComboBoxItem Content="Closed" Tag="closed" />
+                                        <ComboBoxItem Content="All" Tag="all" />
+                                    </ComboBox>
+                                </Grid>
+                                <ListView Margin="0,14,0,0"
+                                          BorderThickness="0"
+                                          ItemsSource="{Binding VisibleIncidents}">
+                                    <ListView.ItemContainerStyle>
+                                        <Style TargetType="ListViewItem">
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                            <Setter Property="Padding" Value="0" />
+                                            <Setter Property="Margin" Value="0,0,0,10" />
+                                        </Style>
+                                    </ListView.ItemContainerStyle>
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#FAFCFF"
+                                                    BorderBrush="{StaticResource BorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="8"
+                                                    Padding="14">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <StackPanel>
+                                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                                            <Border Background="{Binding SeverityBackground}"
+                                                                    CornerRadius="8"
+                                                                    Padding="9,3"
+                                                                    Margin="0,0,8,0">
+                                                                <TextBlock Text="{Binding Severity}"
+                                                                           Foreground="{Binding SeverityForeground}"
+                                                                           FontSize="12"
+                                                                           FontWeight="SemiBold" />
+                                                            </Border>
+                                                            <Border Background="{Binding StatusBackground}"
+                                                                    CornerRadius="8"
+                                                                    Padding="9,3">
+                                                                <TextBlock Text="{Binding StatusLine}"
+                                                                           Foreground="{Binding StatusForeground}"
+                                                                           FontSize="12"
+                                                                           FontWeight="SemiBold" />
+                                                            </Border>
+                                                        </StackPanel>
+
+                                                        <TextBlock Text="{Binding Description}"
+                                                                   Foreground="{StaticResource TextBrush}"
+                                                                   FontWeight="SemiBold"
+                                                                   TextWrapping="Wrap" />
+                                                        <TextBlock Text="{Binding Patient}"
+                                                                   Foreground="{StaticResource MutedBrush}"
+                                                                   FontSize="12"
+                                                                   Margin="0,5,0,0" />
+                                                        <TextBlock Text="{Binding Task}"
+                                                                   Foreground="{StaticResource MutedBrush}"
+                                                                   FontSize="12"
+                                                                   TextWrapping="Wrap"
+                                                                   Margin="0,2,0,0" />
+                                                        <TextBlock Text="{Binding CreatedLine}"
+                                                                   Foreground="{StaticResource MutedBrush}"
+                                                                   FontSize="12"
+                                                                   Margin="0,8,0,0" />
+                                                        <TextBlock Text="{Binding ReportLabel}"
+                                                                   Foreground="{StaticResource BlueBrush}"
+                                                                   FontSize="12"
+                                                                   FontWeight="SemiBold"
+                                                                   Margin="0,2,0,0" />
+                                                    </StackPanel>
+
+                                                    <Button Grid.Column="1"
+                                                            Content="Open"
+                                                            Style="{StaticResource SecondaryButtonStyle}"
+                                                            CommandParameter="{Binding}"
+                                                            Click="OpenIncidentDetail_Click"
+                                                            VerticalAlignment="Top"
+                                                            Margin="18,0,0,0" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
                             </StackPanel>
                         </Border>
                     </Grid>

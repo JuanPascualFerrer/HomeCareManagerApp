@@ -30,15 +30,22 @@ namespace HomeCareManagerApp
         public AssignTaskWindow(TaskRow task) : this()
         {
             // Display task info
-            TaskInfoText.Text = $"{task.Description} — {task.PatientName}";
+            TaskInfoText.Text = $"{task.Description} - {task.PatientName}";
 
-            // Load assistants into the combo box
-            var users = database.GetUserSummaries()
-                .Where(u => string.Equals(u.RoleName, "Assistant", StringComparison.OrdinalIgnoreCase))
-                .Select(u => new { UserId = u.UserId, DisplayName = $"{u.Name} — {u.Email}" })
+            var users = database.GetEligibleWorkerSummaries(task.RequiredSkillId, task.Date, task.PatientZone)
+                .Select(u => new { UserId = u.UserId, DisplayName = $"{u.Name} - {u.RoleName} - {u.Email}" })
                 .ToList();
 
             WorkerComboBox.ItemsSource = users;
+
+            if (users.Count == 0)
+            {
+                MessageBox.Show(
+                    "No active worker matches this task skill, date, and zone.",
+                    "HomeCare Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)

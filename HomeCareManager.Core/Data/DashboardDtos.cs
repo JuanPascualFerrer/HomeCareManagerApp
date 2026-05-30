@@ -14,6 +14,11 @@ namespace HomeCareManager.Core.Data
         public string Priority { get; set; } = string.Empty;
         public string StatusId { get; set; } = string.Empty;
         public string StatusName { get; set; } = string.Empty;
+        public int AssignmentCount { get; set; }
+        public string AssignedTo { get; set; } = string.Empty;
+        public string CurrentUserAssignmentId { get; set; } = string.Empty;
+        public string CurrentUserAssignmentStatusId { get; set; } = string.Empty;
+        public string CurrentUserAssignmentStatusName { get; set; } = string.Empty;
     }
 
     public class IncidentSummary
@@ -21,7 +26,26 @@ namespace HomeCareManager.Core.Data
         public string IncidentId { get; set; } = string.Empty;
         public string PatientName { get; set; } = string.Empty;
         public string TaskDescription { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Severity { get; set; } = string.Empty;
+        public string CreatedBy { get; set; } = string.Empty;
+        public string ResolutionNotes { get; set; } = string.Empty;
+        public string ReportId { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public DateTime? ResolvedAt { get; set; }
+    }
+
+    public class ReportSummary
+    {
+        public string ReportId { get; set; } = string.Empty;
+        public string TaskDescription { get; set; } = string.Empty;
+        public string PatientName { get; set; } = string.Empty;
+        public string CreatedBy { get; set; } = string.Empty;
+        public string Notes { get; set; } = string.Empty;
+        public string StatusBefore { get; set; } = string.Empty;
+        public string StatusAfter { get; set; } = string.Empty;
+        public string Duration { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
     }
 
@@ -31,6 +55,7 @@ namespace HomeCareManager.Core.Data
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string RoleName { get; set; } = string.Empty;
+        public string SkillId { get; set; } = string.Empty;
         public bool IsActive { get; set; }
     }
 }
