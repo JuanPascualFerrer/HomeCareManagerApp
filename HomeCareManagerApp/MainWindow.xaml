@@ -331,6 +331,24 @@
                                             <DataGridTextColumn Header="Zone" Binding="{Binding Zone}" Width="120" />
                                             <DataGridTextColumn Header="Priority" Binding="{Binding Priority}" Width="100" />
                                             <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="120" />
+                                            <DataGridTemplateColumn Header="Actions" Width="160">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                            <Button Content="Edit"
+                        Style="{StaticResource GridActionButtonStyle}"
+                        CommandParameter="{Binding}"
+                        Click="EditPatient_Click"
+                        Visibility="{Binding ElementName=NewPatientButton, Path=Visibility}" />
+                                                            <Button Content="Delete"
+                        Style="{StaticResource GridActionButtonStyle}"
+                        CommandParameter="{Binding}"
+                        Click="DeletePatient_Click"
+                        Visibility="{Binding ElementName=NewPatientButton, Path=Visibility}" />
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
                                         </DataGrid.Columns>
                                     </DataGrid>
                                 </StackPanel>
@@ -399,18 +417,31 @@
                         <Border Grid.Column="2" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                             <StackPanel>
                                 <TextBlock Text="Task status" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
-                                <ListBox Margin="0,14,0,0"
-                                         BorderThickness="0"
-                                         ItemsSource="{Binding Tasks}">
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Margin="0,8">
-                                                <TextBlock Text="{Binding StatusLine}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                                                <TextBlock Text="{Binding PatientName}" Foreground="{StaticResource MutedBrush}" FontSize="12" />
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
+                                <DataGrid Margin="0,14,0,0"
+                                          AutoGenerateColumns="False"
+                                          HeadersVisibility="Column"
+                                          CanUserAddRows="False"
+                                          ItemsSource="{Binding Tasks}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*" />
+                                        <DataGridTextColumn Header="Patient" Binding="{Binding PatientName}" Width="1.2*" />
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100" />
+                                        <DataGridTextColumn Header="Priority" Binding="{Binding Priority}" Width="80" />
+                                        <DataGridTemplateColumn Header="Actions" Width="80">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                        <Button Content="Assign"
+                                                                Style="{StaticResource GridActionButtonStyle}"
+                                                                CommandParameter="{Binding}"
+                                                                Click="AssignTask_Click"
+                                                                Visibility="{Binding ElementName=NewTaskButton, Path=Visibility}" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
                             </StackPanel>
                         </Border>
                     </Grid>

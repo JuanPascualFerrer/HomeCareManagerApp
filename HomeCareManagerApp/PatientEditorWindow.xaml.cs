@@ -17,6 +17,23 @@ namespace HomeCareManagerApp
         {
             InitializeComponent();
         }
+        public PatientEditorWindow(PatientRow patient) : this()
+        {
+            NameTextBox.Text = patient.Name;
+            AddressTextBox.Text = patient.Address;
+            PhoneTextBox.Text = patient.Phone;
+            ZoneTextBox.Text = patient.Zone;
+            NotesTextBox.Text = patient.Notes;
+
+            foreach (ComboBoxItem item in PriorityComboBox.Items)
+            {
+                if (item.Content?.ToString() == patient.Priority)
+                {
+                    PriorityComboBox.SelectedItem = item;
+                    break;
+                }
+            }
+        }
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {

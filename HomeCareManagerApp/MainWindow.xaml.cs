@@ -183,6 +183,54 @@ namespace HomeCareManagerApp
             ReloadData(showMessages: false);
         }
 
+        private void AssignTask_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as Button)?.CommandParameter is not TaskRow task)
+                return;
+
+            if (!CanCreatePatientsAndTasks())
+            {
+                MessageBox.Show(
+                    "You do not have permission to assign tasks.",
+                    "HomeCare Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return;
+            }
+
+            AssignTaskWindow dialog = new AssignTaskWindow(task)
+            {
+                Owner = this
+            };
+
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            string assignmentId = $"assign-{Guid.NewGuid():N}".Substring(0, 20);
+
+            bool saved = database.InsertTaskAssignment(
+                assignmentId,
+                dialog.SelectedUserId,
+                task.Id,
+                DateTime.Now,
+                "assigned");
+
+            if (!saved)
+            {
+                MessageBox.Show(
+                    "The assignment could not be saved. Check that MySQL is running and related records exist.",
+                    "HomeCare Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            MessageBox.Show("Task assigned successfully.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+            ReloadData(showMessages: false);
+        }
+
         private void NewPatient_Click(object sender, RoutedEventArgs e)
         {
             if (!CanCreatePatientsAndTasks())
@@ -229,6 +277,66 @@ namespace HomeCareManagerApp
             MessageBox.Show("Patient saved successfully.", "HomeCare Manager", MessageBoxButton.OK, MessageBoxImage.Information);
             ReloadData(showMessages: false);
             SelectSection(PatientsNavButton);
+        }
+        private void EditPatient_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as Button)?.CommandParameter is not PatientRow row)
+                return;
+
+            PatientEditorWindow dialog = new PatientEditorWindow(row)
+            {
+                Owner = this
+            };
+
+            if (dialog.ShowDialog() != true)
+                return;
+
+            bool saved = database.UpdatePatient(
+                row.Id,
+                dialog.PatientName,
+                dialog.Address,
+                dialog.Phone,
+                string.IsNullOrWhiteSpace(dialog.Notes) ? "No notes" : dialog.Notes,
+                dialog.Priority,
+                string.IsNullOrWhiteSpace(dialog.EmergencyContact) ? "Not specified" : dialog.EmergencyContact,
+                dialog.Zone);
+
+            if (!saved)
+            {
+                MessageBox.Show("The patient could not be updated.", "HomeCare Manager",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            MessageBox.Show("Patient updated successfully.", "HomeCare Manager",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            ReloadData(showMessages: false);
+        }
+
+        private void DeletePatient_Click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as Button)?.CommandParameter is not PatientRow row)
+                return;
+
+            MessageBoxResult result = MessageBox.Show(
+                $"Delete patient {row.Name}?",
+                "HomeCare Manager",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result != MessageBoxResult.Yes)
+                return;
+
+            bool deleted = database.DeletePatient(row.Id);
+
+            if (!deleted)
+            {
+                MessageBox.Show("The patient could not be deleted.", "HomeCare Manager",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            ReloadData(showMessages: false);
         }
 
         private void CreateUser_Click(object sender, RoutedEventArgs e)
@@ -436,7 +544,9 @@ namespace HomeCareManagerApp
             }
 
             List<HomeCareManager.Core.Models.Patient> patients = database.GetPatients();
-            List<TaskSummary> tasks = database.GetTaskSummaries();
+            List<TaskSummary> tasks = CanCreatePatientsAndTasks()
+                ? database.GetTaskSummaries()
+                : database.GetTaskSummariesForUser(currentUser.UserId);
             List<IncidentSummary> incidents = database.GetIncidentSummaries();
             List<UserSummary> users = database.GetUserSummaries();
             List<HomeCareManager.Core.Models.Skill> skills = database.GetSkills();

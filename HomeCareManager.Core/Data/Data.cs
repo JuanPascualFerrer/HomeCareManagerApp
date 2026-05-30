@@ -924,6 +924,34 @@ namespace HomeCareManager.Core.Data
             });
         }
 
+        public List<TaskSummary> GetTaskSummariesForUser(string userId)
+        {
+            const string query = "SELECT t.TaskId, t.RequiredSkillId, t.PatientId, t.Description, t.Date, t.Priority, t.StatusId, " +
+                "COALESCE(p.Name, t.PatientId) AS PatientName, " +
+                "COALESCE(p.Zone, '') AS PatientZone, " +
+                "COALESCE(ts.Name, t.StatusId) AS StatusName " +
+                "FROM tasks t " +
+                "INNER JOIN task_assignments ta ON ta.TaskId = t.TaskId " +
+                "LEFT JOIN patients p ON p.PatientId = t.PatientId " +
+                "LEFT JOIN task_status ts ON ts.StatusId = t.StatusId " +
+                "WHERE ta.UserId = @userId " +
+                "ORDER BY t.Date DESC;";
+
+            return ExecuteReader(query, reader => new TaskSummary
+            {
+                TaskId = reader.GetString("TaskId"),
+                RequiredSkillId = reader.GetString("RequiredSkillId"),
+                PatientId = reader.GetString("PatientId"),
+                PatientName = reader.GetString("PatientName"),
+                PatientZone = reader.GetString("PatientZone"),
+                Description = reader.GetString("Description"),
+                Date = reader.GetDateTime("Date"),
+                Priority = reader.GetString("Priority"),
+                StatusId = reader.GetString("StatusId"),
+                StatusName = reader.GetString("StatusName")
+            }, ("@userId", userId));
+        }
+
         public List<IncidentSummary> GetIncidentSummaries()
         {
             const string query = "SELECT i.IncidentId, i.Status, i.CreatedAt, " +
