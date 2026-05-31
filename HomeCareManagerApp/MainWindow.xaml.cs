@@ -29,10 +29,13 @@ namespace HomeCareManagerApp
         public ObservableCollection<TaskRow> Tasks { get; } = new ObservableCollection<TaskRow>();
         public ObservableCollection<TaskRow> VisibleTasks { get; } = new ObservableCollection<TaskRow>();
         public ObservableCollection<TaskRow> DashboardTasks { get; } = new ObservableCollection<TaskRow>();
+        public ObservableCollection<TaskRow> DashboardHistoryTasks { get; } = new ObservableCollection<TaskRow>();
+        public ObservableCollection<DashboardAlertRow> DashboardAlerts { get; } = new ObservableCollection<DashboardAlertRow>();
         public ObservableCollection<IncidentRow> Incidents { get; } = new ObservableCollection<IncidentRow>();
         public ObservableCollection<IncidentRow> VisibleIncidents { get; } = new ObservableCollection<IncidentRow>();
         public ObservableCollection<UserRow> Users { get; } = new ObservableCollection<UserRow>();
         public ObservableCollection<PatientOption> PatientOptions { get; } = new ObservableCollection<PatientOption>();
+        public ObservableCollection<PatientRow> VisiblePatients { get; } = new ObservableCollection<PatientRow>();
         public ObservableCollection<PatientOption> TaskFilterPatientOptions { get; } = new ObservableCollection<PatientOption>();
         public ObservableCollection<LookupOption> SkillOptions { get; } = new ObservableCollection<LookupOption>();
         public ObservableCollection<LookupOption> StatusOptions { get; } = new ObservableCollection<LookupOption>();
@@ -152,7 +155,10 @@ namespace HomeCareManagerApp
                 LoginWindow loginWindow = new LoginWindow();
                 loginWindow.Show();
                 Close();
+                return;
             }
+
+            ReloadData(showMessages: false);
         }
 
         private void SaveTask_Click(object sender, RoutedEventArgs e)
@@ -846,6 +852,8 @@ namespace HomeCareManagerApp
 
             string selectedTaskPatientFilterId = (TaskPatientFilterComboBox.SelectedItem as PatientOption)?.Id ?? string.Empty;
             string selectedAssignmentFilter = GetSelectedComboTag(TaskAssignmentFilterComboBox, "all");
+            string selectedTaskStatusFilter = GetSelectedComboTag(TaskStatusFilterComboBox, "all");
+            string selectedTaskPriorityFilter = GetSelectedComboTag(TaskPriorityFilterComboBox, "all");
             string selectedTaskSort = GetSelectedComboTag(TaskSortComboBox, "date-desc");
             string selectedIncidentFilter = GetSelectedComboTag(IncidentStatusFilterComboBox, "active");
 
@@ -866,6 +874,7 @@ namespace HomeCareManagerApp
                 patient.Phone,
                 patient.Address,
                 patient.Notes)));
+            ApplyPatientFilters();
 
             ReplaceItems(PatientOptions, patients.Select(patient => new PatientOption(patient.PatientId, patient.Name)));
             ReplaceItems(
@@ -874,6 +883,8 @@ namespace HomeCareManagerApp
                     .Concat(patients.Select(patient => new PatientOption(patient.PatientId, patient.Name))));
             SelectTaskFilterPatient(selectedTaskPatientFilterId);
             SelectComboItemByTag(TaskAssignmentFilterComboBox, selectedAssignmentFilter);
+            SelectComboItemByTag(TaskStatusFilterComboBox, selectedTaskStatusFilter);
+            SelectComboItemByTag(TaskPriorityFilterComboBox, selectedTaskPriorityFilter);
             SelectComboItemByTag(TaskSortComboBox, selectedTaskSort);
 
             ReplaceItems(Tasks, tasks.Select(task => new TaskRow(
@@ -940,10 +951,47 @@ namespace HomeCareManagerApp
             ApplyIncidentFilters();
         }
 
+        private void PatientSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ApplyPatientFilters();
+        }
+
+        private void ApplyPatientFilters()
+        {
+            if (PatientSearchTextBox == null || PatientResultCountText == null)
+            {
+                return;
+            }
+
+            string searchText = PatientSearchTextBox.Text.Trim();
+            IEnumerable<PatientRow> filteredPatients = Patients;
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                filteredPatients = filteredPatients.Where(patient =>
+                    ContainsSearchText(patient.Name, searchText)
+                    || ContainsSearchText(patient.Zone, searchText)
+                    || ContainsSearchText(patient.Priority, searchText)
+                    || ContainsSearchText(patient.Phone, searchText)
+                    || ContainsSearchText(patient.Address, searchText)
+                    || ContainsSearchText(patient.Notes, searchText));
+            }
+
+            List<PatientRow> visiblePatients = filteredPatients
+                .OrderByDescending(patient => IsHighPriority(patient.Priority))
+                .ThenBy(patient => patient.Name)
+                .ToList();
+
+            ReplaceItems(VisiblePatients, visiblePatients);
+            PatientResultCountText.Text = visiblePatients.Count == 1 ? "1 patient" : $"{visiblePatients.Count} patients";
+        }
+
         private void ApplyTaskFilters()
         {
             if (TaskPatientFilterComboBox == null
                 || TaskAssignmentFilterComboBox == null
+                || TaskStatusFilterComboBox == null
+                || TaskPriorityFilterComboBox == null
                 || TaskSortComboBox == null
                 || TaskResultCountText == null)
             {
@@ -958,6 +1006,18 @@ namespace HomeCareManagerApp
                 && !string.IsNullOrWhiteSpace(selectedPatient.Id))
             {
                 filteredTasks = filteredTasks.Where(task => task.PatientId.Equals(selectedPatient.Id, StringComparison.OrdinalIgnoreCase));
+            }
+
+            string statusFilter = (TaskStatusFilterComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "all";
+            if (!statusFilter.Equals("all", StringComparison.OrdinalIgnoreCase))
+            {
+                filteredTasks = filteredTasks.Where(task => task.StatusId.Equals(statusFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            string priorityFilter = (TaskPriorityFilterComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "all";
+            if (!priorityFilter.Equals("all", StringComparison.OrdinalIgnoreCase))
+            {
+                filteredTasks = filteredTasks.Where(task => task.Priority.Equals(priorityFilter, StringComparison.OrdinalIgnoreCase));
             }
 
             string assignmentFilter = (TaskAssignmentFilterComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "all";
@@ -1018,12 +1078,15 @@ namespace HomeCareManagerApp
         private void LoadEmptyData()
         {
             ReplaceItems(Patients, Array.Empty<PatientRow>());
+            ReplaceItems(VisiblePatients, Array.Empty<PatientRow>());
 
             ReplaceItems(PatientOptions, Patients.Select(patient => new PatientOption(patient.Id, patient.Name)));
 
             ReplaceItems(Tasks, Array.Empty<TaskRow>());
             ReplaceItems(VisibleTasks, Array.Empty<TaskRow>());
             ReplaceItems(DashboardTasks, Array.Empty<TaskRow>());
+            ReplaceItems(DashboardHistoryTasks, Array.Empty<TaskRow>());
+            ReplaceItems(DashboardAlerts, Array.Empty<DashboardAlertRow>());
             ReplaceItems(TaskFilterPatientOptions, new[] { new PatientOption(string.Empty, "All patients") });
 
             ReplaceItems(Incidents, Array.Empty<IncidentRow>());
@@ -1037,10 +1100,12 @@ namespace HomeCareManagerApp
 
             SelectFirstOptions();
             EnsureTaskFilterSelections();
+            ApplyPatientFilters();
             ApplyTaskFilters();
             ApplyIncidentFilters();
             ConnectionStatusText.Text = "Disconnected";
             UpdateDashboardNumbers();
+            UpdateDashboardAlerts();
         }
 
         private static void ReplaceItems<T>(ObservableCollection<T> target, IEnumerable<T> items)
@@ -1071,6 +1136,16 @@ namespace HomeCareManagerApp
             if (TaskAssignmentFilterComboBox.SelectedIndex < 0)
             {
                 TaskAssignmentFilterComboBox.SelectedIndex = 0;
+            }
+
+            if (TaskStatusFilterComboBox.SelectedIndex < 0)
+            {
+                TaskStatusFilterComboBox.SelectedIndex = 0;
+            }
+
+            if (TaskPriorityFilterComboBox.SelectedIndex < 0)
+            {
+                TaskPriorityFilterComboBox.SelectedIndex = 0;
             }
 
             if (TaskSortComboBox.SelectedIndex < 0)
@@ -1190,14 +1265,15 @@ namespace HomeCareManagerApp
         private void UpdateDashboardNumbers()
         {
             int highPriorityPatients = Patients.Count(patient => IsHighPriority(patient.Priority));
-            int pendingTasks = Tasks.Count(task => !task.IsCompleted);
+            int pendingTasks = Tasks.Count(task => task.IsPending);
+            int activeTasks = Tasks.Count(task => !task.IsFinal);
             int activeUsers = Users.Count(user => user.Active.Equals("Yes", StringComparison.OrdinalIgnoreCase));
             int activeIncidents = Incidents.Count(incident => incident.IsActive);
 
             PatientCountText.Text = Patients.Count.ToString();
             PatientMetaText.Text = $"{highPriorityPatients} high priority";
             TaskCountText.Text = pendingTasks.ToString();
-            TaskMetaText.Text = $"{pendingTasks} pending";
+            TaskMetaText.Text = $"{activeTasks} active total";
             UserCountText.Text = activeUsers.ToString();
             UserMetaText.Text = $"{Users.Count} registered users";
             IncidentCountText.Text = activeIncidents.ToString();
@@ -1206,12 +1282,80 @@ namespace HomeCareManagerApp
         private void UpdateDashboardTasks()
         {
             IEnumerable<TaskRow> dashboardTasks = Tasks
-                .OrderBy(task => task.IsCompleted)
-                .ThenBy(task => task.Date)
+                .Where(task => !task.IsFinal)
+                .OrderByDescending(task => task.IsOverdue)
                 .ThenByDescending(task => PriorityRank(task.Priority))
+                .ThenBy(task => task.Date)
                 .Take(8);
 
             ReplaceItems(DashboardTasks, dashboardTasks);
+
+            IEnumerable<TaskRow> historyTasks = Tasks
+                .Where(task => task.IsCompleted)
+                .OrderByDescending(task => task.Date)
+                .Take(8);
+
+            ReplaceItems(DashboardHistoryTasks, historyTasks);
+            UpdateDashboardAlerts();
+        }
+
+        private void UpdateDashboardAlerts()
+        {
+            List<DashboardAlertRow> alerts = new List<DashboardAlertRow>();
+
+            IEnumerable<TaskRow> overdueTasks = Tasks
+                .Where(task => task.IsOverdue)
+                .OrderBy(task => task.Date)
+                .Take(3);
+
+            foreach (TaskRow task in overdueTasks)
+            {
+                alerts.Add(new DashboardAlertRow(
+                    "Overdue",
+                    task.Description,
+                    $"{task.PatientName} - {task.Date:g}",
+                    "High"));
+            }
+
+            IEnumerable<TaskRow> highPriorityUnassignedTasks = Tasks
+                .Where(task => task.IsPending && !task.IsAssigned && task.IsHighPriority)
+                .OrderBy(task => task.Date)
+                .Take(3);
+
+            foreach (TaskRow task in highPriorityUnassignedTasks)
+            {
+                alerts.Add(new DashboardAlertRow(
+                    "Unassigned",
+                    task.Description,
+                    $"{task.PatientName} - high priority",
+                    "Medium"));
+            }
+
+            IEnumerable<IncidentRow> urgentIncidents = Incidents
+                .Where(incident => incident.IsActive && SeverityRank(incident.Severity) >= 3)
+                .OrderByDescending(incident => SeverityRank(incident.Severity))
+                .ThenByDescending(incident => incident.CreatedAt)
+                .Take(3);
+
+            foreach (IncidentRow incident in urgentIncidents)
+            {
+                alerts.Add(new DashboardAlertRow(
+                    incident.Severity,
+                    incident.Description,
+                    $"{incident.Patient} - {incident.CreatedAt:g}",
+                    incident.SeverityRank >= 4 ? "High" : "Medium"));
+            }
+
+            if (alerts.Count == 0)
+            {
+                alerts.Add(new DashboardAlertRow(
+                    "Clear",
+                    "No urgent alerts",
+                    "Tasks and incidents are within expected status.",
+                    "Low"));
+            }
+
+            ReplaceItems(DashboardAlerts, alerts);
         }
 
         private static bool IsHighPriority(string priority)
@@ -1219,9 +1363,9 @@ namespace HomeCareManagerApp
             return priority.Equals("High", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static bool IsPending(string status)
+        private static bool ContainsSearchText(string value, string searchText)
         {
-            return status.Equals("Pending", StringComparison.OrdinalIgnoreCase);
+            return value.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private void SelectSection(Button selectedButton)
@@ -1301,7 +1445,10 @@ namespace HomeCareManagerApp
         public string StatusLine => $"{Status} - {Description}";
         public bool IsAssigned => AssignmentCount > 0;
         public bool HasCurrentUserAssignment => !string.IsNullOrWhiteSpace(CurrentUserAssignmentId);
+        public bool IsPending => StatusId.Equals("pending", StringComparison.OrdinalIgnoreCase);
         public bool IsCompleted => StatusId.Equals("completed", StringComparison.OrdinalIgnoreCase);
+        public bool IsHighPriority => Priority.Equals("High", StringComparison.OrdinalIgnoreCase);
+        public bool IsOverdue => !IsFinal && Date.Date < DateTime.Today;
         public bool IsAvailableForCurrentUser => !CanManageTasks
             && !HasCurrentUserAssignment
             && StatusId.Equals("pending", StringComparison.OrdinalIgnoreCase);
@@ -1317,13 +1464,25 @@ namespace HomeCareManagerApp
                 || CurrentUserAssignmentStatusId.Equals("in-progress", StringComparison.OrdinalIgnoreCase));
         public string AssignmentDisplay => IsAvailableForCurrentUser ? "Available" : IsAssigned ? AssignedTo : "Unassigned";
         public string AssignAction => IsAssigned ? "Reassign" : "Assign";
-        public string DashboardStatusLabel => IsCompleted ? "Complete" : "Pending";
-        public Brush DashboardStatusBackground => IsCompleted
-            ? new SolidColorBrush(Color.FromRgb(220, 252, 231))
-            : new SolidColorBrush(Color.FromRgb(254, 226, 226));
-        public Brush DashboardStatusForeground => IsCompleted
-            ? new SolidColorBrush(Color.FromRgb(22, 101, 52))
-            : new SolidColorBrush(Color.FromRgb(185, 28, 28));
+        public string DashboardStatusLabel => IsOverdue ? "Overdue" : Status;
+        public string DueLine => $"{Date:g} - {Priority} priority";
+        public string HistoryLine => $"{PatientName} - {Date:g}";
+        public Brush DashboardStatusBackground => DashboardStatusLabel.ToLowerInvariant() switch
+        {
+            "completed" => new SolidColorBrush(Color.FromRgb(220, 252, 231)),
+            "accepted" => new SolidColorBrush(Color.FromRgb(227, 242, 253)),
+            "assigned" => new SolidColorBrush(Color.FromRgb(254, 243, 199)),
+            "overdue" => new SolidColorBrush(Color.FromRgb(254, 226, 226)),
+            _ => new SolidColorBrush(Color.FromRgb(239, 246, 255))
+        };
+        public Brush DashboardStatusForeground => DashboardStatusLabel.ToLowerInvariant() switch
+        {
+            "completed" => new SolidColorBrush(Color.FromRgb(22, 101, 52)),
+            "accepted" => new SolidColorBrush(Color.FromRgb(21, 101, 192)),
+            "assigned" => new SolidColorBrush(Color.FromRgb(146, 64, 14)),
+            "overdue" => new SolidColorBrush(Color.FromRgb(185, 28, 28)),
+            _ => new SolidColorBrush(Color.FromRgb(21, 101, 192))
+        };
         public Visibility EditActionVisibility => CanManageTasks ? Visibility.Visible : Visibility.Collapsed;
         public Visibility AssignActionVisibility => CanManageTasks && !IsFinal ? Visibility.Visible : Visibility.Collapsed;
         public Visibility AcceptActionVisibility => CanWorkerAccept ? Visibility.Visible : Visibility.Collapsed;
@@ -1346,6 +1505,14 @@ namespace HomeCareManagerApp
     {
         public bool IsActive => !Status.Equals("Closed", StringComparison.OrdinalIgnoreCase)
             && !Status.Equals("Resolved", StringComparison.OrdinalIgnoreCase);
+        public int SeverityRank => Severity.ToLowerInvariant() switch
+        {
+            "critical" => 4,
+            "high" => 3,
+            "medium" => 2,
+            "low" => 1,
+            _ => 0
+        };
         public string CreatedLine => $"By {CreatedBy} - {CreatedAt:g}";
         public string StatusLine => ResolvedAt.HasValue ? $"{Status} - {ResolvedAt:g}" : Status;
         public string ReportLabel => string.IsNullOrWhiteSpace(ReportId) ? "Report: task history" : $"Report: {ReportId}";
@@ -1374,6 +1541,23 @@ namespace HomeCareManagerApp
     }
 
     public record UserRow(string Id, string Name, string Email, string Role, string Active);
+
+    public record DashboardAlertRow(string Type, string Message, string Detail, string Severity)
+    {
+        public Brush SeverityBackground => Severity.ToLowerInvariant() switch
+        {
+            "high" => new SolidColorBrush(Color.FromRgb(254, 226, 226)),
+            "medium" => new SolidColorBrush(Color.FromRgb(254, 243, 199)),
+            _ => new SolidColorBrush(Color.FromRgb(220, 252, 231))
+        };
+
+        public Brush SeverityForeground => Severity.ToLowerInvariant() switch
+        {
+            "high" => new SolidColorBrush(Color.FromRgb(185, 28, 28)),
+            "medium" => new SolidColorBrush(Color.FromRgb(146, 64, 14)),
+            _ => new SolidColorBrush(Color.FromRgb(22, 101, 52))
+        };
+    }
 
     public record PatientOption(string Id, string Name);
 

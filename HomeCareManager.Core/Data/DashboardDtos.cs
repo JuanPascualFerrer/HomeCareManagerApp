@@ -58,4 +58,12 @@ namespace HomeCareManager.Core.Data
         public string SkillId { get; set; } = string.Empty;
         public bool IsActive { get; set; }
     }
+
+    public class AvailabilitySummary
+    {
+        public string AvailabilityId { get; set; } = string.Empty;
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public string Zone { get; set; } = string.Empty;
+    }
 }

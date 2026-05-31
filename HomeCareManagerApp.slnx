@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="HomeCareManager.Core/HomeCareManager.Core.csproj" Id="b05bf8ca-ba4f-4921-aff1-6fc663ea581d" />
+  <Project Path="HomeCareManager.Core.Tests/HomeCareManager.Core.Tests.csproj" />
   <Project Path="HomeCareManagerApp/HomeCareManagerApp.csproj" />
 </Solution>

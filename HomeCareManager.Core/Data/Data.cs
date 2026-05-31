@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using HomeCareManager.Core.Configuration;
 using MySqlConnector;
 using HomeCareManager.Core.Models;
 using System.Security.AccessControl;
@@ -9,11 +10,7 @@ namespace HomeCareManager.Core.Data
 {
     public class Data
     {
-        private const string DefaultConnectionString =
-            "datasource = 127.0.0.1;" +
-            "port = 3306;" +
-            "username = root; password = ;" +
-            "database = homecaremanager";
+        private static readonly string DefaultConnectionString = DatabaseConfiguration.GetConnectionString();
 
         private readonly string connectionString;
         private const string PendingStatusId = "pending";
@@ -935,9 +932,9 @@ namespace HomeCareManager.Core.Data
 
         public bool InsertAvailability(
             string availabilityId,
-            string startTime,
+            DateTime startTime,
             string zone,
-            string endTime,
+            DateTime endTime,
             string userId)
         {
             string query = "INSERT INTO availability(AvailabilityId, StartTime, Zone, EndTime, UserId) " +
@@ -957,9 +954,9 @@ namespace HomeCareManager.Core.Data
 
         public bool UpdateAvailability(
             string availabilityId,
-            string startTime,
+            DateTime startTime,
             string zone,
-            string endTime,
+            DateTime endTime,
             string userId)
         {
             string query = "UPDATE availability " +
@@ -991,6 +988,22 @@ namespace HomeCareManager.Core.Data
                 availabilityId,
                 query,
                 ("@availabilityId", availabilityId));
+        }
+
+        public List<AvailabilitySummary> GetAvailabilityForUser(string userId)
+        {
+            const string query = "SELECT AvailabilityId, StartTime, EndTime, Zone " +
+                "FROM availability " +
+                "WHERE UserId = @userId " +
+                "ORDER BY StartTime;";
+
+            return ExecuteReader(query, reader => new AvailabilitySummary
+            {
+                AvailabilityId = reader.GetString("AvailabilityId"),
+                StartTime = reader.GetDateTime("StartTime"),
+                EndTime = reader.GetDateTime("EndTime"),
+                Zone = reader.GetString("Zone")
+            }, ("@userId", userId));
         }
 
         public List<Patient> GetPatients()

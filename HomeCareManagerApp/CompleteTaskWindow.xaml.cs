@@ -24,9 +24,16 @@ namespace HomeCareManagerApp
 
         private void ReportIncident_Changed(object sender, RoutedEventArgs e)
         {
-            IncidentPanel.Visibility = ReportIncidentCheckBox.IsChecked == true
+            bool shouldShowIncident = ReportIncidentCheckBox.IsChecked == true;
+            IncidentPanel.Visibility = shouldShowIncident
                 ? Visibility.Visible
                 : Visibility.Collapsed;
+
+            if (shouldShowIncident)
+            {
+                IncidentDescriptionTextBox.Focus();
+                IncidentDescriptionTextBox.BringIntoView();
+            }
         }
 
         private void Complete_Click(object sender, RoutedEventArgs e)

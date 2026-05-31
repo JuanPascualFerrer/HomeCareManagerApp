@@ -234,7 +234,9 @@
                     <Grid x:Name="DashboardView">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="22" />
+                            <RowDefinition Height="16" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="16" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
@@ -271,44 +273,118 @@
 
                         <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                             <StackPanel>
-                                <TextBlock Text="Pending tasks" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
+                                <TextBlock Text="Operational alerts" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
                                 <ListView Margin="0,14,0,0"
                                           BorderThickness="0"
-                                          ItemsSource="{Binding DashboardTasks}">
+                                          ItemsSource="{Binding DashboardAlerts}">
                                     <ListView.ItemTemplate>
                                         <DataTemplate>
-                                            <Button CommandParameter="{Binding}"
-                                                    Click="OpenTaskDetail_Click"
-                                                    HorizontalContentAlignment="Stretch"
-                                                    Background="Transparent"
-                                                    BorderThickness="0"
-                                                    Padding="0"
-                                                    Cursor="Hand">
-                                                <Grid Margin="0,8">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <StackPanel>
-                                                        <TextBlock Text="{Binding Description}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" />
-                                                        <TextBlock Text="{Binding Summary}" Foreground="{StaticResource MutedBrush}" FontSize="12" />
-                                                    </StackPanel>
-                                                    <Border Grid.Column="1"
-                                                            Background="{Binding DashboardStatusBackground}"
-                                                            CornerRadius="8"
-                                                            Padding="10,4"
-                                                            VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding DashboardStatusLabel}"
-                                                                   Foreground="{Binding DashboardStatusForeground}"
-                                                                   FontWeight="SemiBold" />
-                                                    </Border>
-                                                </Grid>
-                                            </Button>
+                                            <Grid Margin="0,7">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border Background="{Binding SeverityBackground}"
+                                                        CornerRadius="8"
+                                                        Padding="10,4"
+                                                        Margin="0,0,12,0"
+                                                        VerticalAlignment="Top">
+                                                    <TextBlock Text="{Binding Type}"
+                                                               Foreground="{Binding SeverityForeground}"
+                                                               FontWeight="SemiBold" />
+                                                </Border>
+                                                <StackPanel Grid.Column="1">
+                                                    <TextBlock Text="{Binding Message}"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{StaticResource TextBrush}"
+                                                               TextWrapping="Wrap" />
+                                                    <TextBlock Text="{Binding Detail}"
+                                                               Foreground="{StaticResource MutedBrush}"
+                                                               FontSize="12"
+                                                               Margin="0,3,0,0" />
+                                                </StackPanel>
+                                            </Grid>
                                         </DataTemplate>
                                     </ListView.ItemTemplate>
                                 </ListView>
                             </StackPanel>
                         </Border>
+
+                        <Grid Grid.Row="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                                <StackPanel>
+                                    <TextBlock Text="Tasks needing attention" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
+                                    <ListView Margin="0,14,0,0"
+                                              BorderThickness="0"
+                                              ItemsSource="{Binding DashboardTasks}">
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button CommandParameter="{Binding}"
+                                                        Click="OpenTaskDetail_Click"
+                                                        HorizontalContentAlignment="Stretch"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Padding="0"
+                                                        Cursor="Hand">
+                                                    <Grid Margin="0,8">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding Description}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" TextWrapping="Wrap" />
+                                                            <TextBlock Text="{Binding Summary}" Foreground="{StaticResource MutedBrush}" FontSize="12" />
+                                                            <TextBlock Text="{Binding DueLine}" Foreground="{StaticResource MutedBrush}" FontSize="12" Margin="0,2,0,0" />
+                                                        </StackPanel>
+                                                        <Border Grid.Column="1"
+                                                                Background="{Binding DashboardStatusBackground}"
+                                                                CornerRadius="8"
+                                                                Padding="10,4"
+                                                                VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding DashboardStatusLabel}"
+                                                                       Foreground="{Binding DashboardStatusForeground}"
+                                                                       FontWeight="SemiBold" />
+                                                        </Border>
+                                                    </Grid>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="2" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                                <StackPanel>
+                                    <TextBlock Text="Recent task history" Style="{StaticResource SectionTitleStyle}" FontSize="18" />
+                                    <ListView Margin="0,14,0,0"
+                                              BorderThickness="0"
+                                              ItemsSource="{Binding DashboardHistoryTasks}">
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button CommandParameter="{Binding}"
+                                                        Click="OpenTaskDetail_Click"
+                                                        HorizontalContentAlignment="Stretch"
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Padding="0"
+                                                        Cursor="Hand">
+                                                    <StackPanel Margin="0,8">
+                                                        <TextBlock Text="{Binding Description}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" TextWrapping="Wrap" />
+                                                        <TextBlock Text="{Binding HistoryLine}" Foreground="{StaticResource MutedBrush}" FontSize="12" />
+                                                    </StackPanel>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </Grid>
 
                     <Grid x:Name="PatientsView" Visibility="Collapsed">
@@ -339,7 +415,30 @@
                         <Grid Grid.Row="2">
                             <Border Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                                 <StackPanel>
-                                    <DataGrid AutoGenerateColumns="False" HeadersVisibility="Column" CanUserAddRows="False" Margin="0,14,0,0" ItemsSource="{Binding Patients}">
+                                    <Grid Margin="0,0,0,14">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="260" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="PatientSearchTextBox"
+                                                 Height="34"
+                                                 VerticalContentAlignment="Center"
+                                                 Padding="10,0"
+                                                 TextChanged="PatientSearch_TextChanged" />
+                                        <TextBlock Grid.Column="1"
+                                                   Text="Search by name, zone, phone, address, priority, or notes"
+                                                   Foreground="{StaticResource MutedBrush}"
+                                                   FontSize="12"
+                                                   VerticalAlignment="Center"
+                                                   Margin="12,0,0,0" />
+                                        <TextBlock x:Name="PatientResultCountText"
+                                                   Grid.Column="2"
+                                                   Text="0 patients"
+                                                   Foreground="{StaticResource MutedBrush}"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                    <DataGrid AutoGenerateColumns="False" HeadersVisibility="Column" CanUserAddRows="False" Margin="0,0,0,0" ItemsSource="{Binding VisiblePatients}">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
                                             <DataGridTextColumn Header="Zone" Binding="{Binding Zone}" Width="120" />
@@ -418,6 +517,32 @@
                                                 <ComboBoxItem Content="All" Tag="all" />
                                                 <ComboBoxItem Content="Assigned" Tag="assigned" />
                                                 <ComboBoxItem Content="Unassigned" Tag="unassigned" />
+                                            </ComboBox>
+                                        </StackPanel>
+                                        <StackPanel Width="160" Margin="0,0,14,0">
+                                            <TextBlock Text="Status" Style="{StaticResource FieldLabelStyle}" />
+                                            <ComboBox x:Name="TaskStatusFilterComboBox"
+                                                      Height="34"
+                                                      SelectedIndex="0"
+                                                      SelectionChanged="TaskFilter_Changed">
+                                                <ComboBoxItem Content="All" Tag="all" />
+                                                <ComboBoxItem Content="Pending" Tag="pending" />
+                                                <ComboBoxItem Content="Assigned" Tag="assigned" />
+                                                <ComboBoxItem Content="Accepted" Tag="accepted" />
+                                                <ComboBoxItem Content="In progress" Tag="in-progress" />
+                                                <ComboBoxItem Content="Completed" Tag="completed" />
+                                            </ComboBox>
+                                        </StackPanel>
+                                        <StackPanel Width="150" Margin="0,0,14,0">
+                                            <TextBlock Text="Priority" Style="{StaticResource FieldLabelStyle}" />
+                                            <ComboBox x:Name="TaskPriorityFilterComboBox"
+                                                      Height="34"
+                                                      SelectedIndex="0"
+                                                      SelectionChanged="TaskFilter_Changed">
+                                                <ComboBoxItem Content="All" Tag="all" />
+                                                <ComboBoxItem Content="High" Tag="High" />
+                                                <ComboBoxItem Content="Medium" Tag="Medium" />
+                                                <ComboBoxItem Content="Low" Tag="Low" />
                                             </ComboBox>
                                         </StackPanel>
                                         <StackPanel Width="190">
