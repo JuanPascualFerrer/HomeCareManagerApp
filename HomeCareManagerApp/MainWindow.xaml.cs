@@ -1442,7 +1442,6 @@ namespace HomeCareManagerApp
         bool CanManageTasks)
     {
         public string Summary => $"Patient: {PatientName} - {PatientZone}";
-        public string StatusLine => $"{Status} - {Description}";
         public bool IsAssigned => AssignmentCount > 0;
         public bool HasCurrentUserAssignment => !string.IsNullOrWhiteSpace(CurrentUserAssignmentId);
         public bool IsPending => StatusId.Equals("pending", StringComparison.OrdinalIgnoreCase);

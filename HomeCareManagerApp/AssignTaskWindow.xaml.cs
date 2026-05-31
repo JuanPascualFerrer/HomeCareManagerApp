@@ -1,24 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using HomeCareManager.Core.Data;
 
 namespace HomeCareManagerApp
 {
-    /// <summary>
-    /// Lógica de interacción para AssignTaskWindow.xaml
-    /// </summary>
     public partial class AssignTaskWindow : Window
     {
-        private readonly HomeCareManager.Core.Data.Data database = new HomeCareManager.Core.Data.Data();
+        private readonly Data database = new Data();
 
         public string SelectedUserId { get; private set; } = string.Empty;
 
@@ -29,7 +17,6 @@ namespace HomeCareManagerApp
 
         public AssignTaskWindow(TaskRow task) : this()
         {
-            // Display task info
             TaskInfoText.Text = $"{task.Description} - {task.PatientName}";
 
             var users = database.GetEligibleWorkerSummaries(task.RequiredSkillId, task.Date, task.PatientZone)

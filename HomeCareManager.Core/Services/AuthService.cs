@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Linq;
-
-
-using HomeCareManager.Core.Data;
-
 using HomeCareManager.Core.Models;
+using DataAccess = HomeCareManager.Core.Data.Data;
 
 namespace HomeCareManager.Core.Services
 {
     public class AuthService
     {
-        private readonly HomeCareManager.Core.Data.Data data = new HomeCareManager.Core.Data.Data();
+        private readonly DataAccess data = new DataAccess();
 
         public User? Login(string email, string password)
         {
@@ -40,7 +33,5 @@ namespace HomeCareManager.Core.Services
 
             return user;
         }
-
-
     }
 }

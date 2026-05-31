@@ -4,7 +4,6 @@ using System.Linq;
 using HomeCareManager.Core.Configuration;
 using MySqlConnector;
 using HomeCareManager.Core.Models;
-using System.Security.AccessControl;
 
 namespace HomeCareManager.Core.Data
 {
@@ -14,11 +13,7 @@ namespace HomeCareManager.Core.Data
 
         private readonly string connectionString;
         private const string PendingStatusId = "pending";
-        private const string AssignedStatusId = "assigned";
-        private const string AcceptedStatusId = "accepted";
         private const string RejectedStatusId = "rejected";
-        private const string CompletedStatusId = "completed";
-        private const string CancelledStatusId = "cancelled";
 
         public Data(string? connectionString = null)
         {
@@ -81,29 +76,6 @@ namespace HomeCareManager.Core.Data
             }
 
             return rows;
-        }
-
-        private int ExecuteCount(string query, params (string Name, object Value)[] parameters)
-        {
-            try
-            {
-                using (MySqlConnection connection = new MySqlConnection(connectionString))
-                {
-                    using (MySqlCommand commandDatabase = new MySqlCommand(query, connection))
-                    {
-                        AddParameters(commandDatabase, parameters);
-
-                        connection.Open();
-                        object? result = commandDatabase.ExecuteScalar();
-                        return result == null ? 0 : Convert.ToInt32(result);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                return 0;
-            }
         }
 
         public bool CanConnect()
@@ -237,31 +209,6 @@ namespace HomeCareManager.Core.Data
                 ("@roleName", roleName));
         }
 
-        public bool UpdateRole(string roleId, string roleName)
-        {
-            string query = "UPDATE roles SET RoleName = @roleName WHERE RoleId = @roleId;";
-
-            return UpdateIfExists(
-                "roles",
-                "RoleId",
-                roleId,
-                query,
-                ("@roleId", roleId),
-                ("@roleName", roleName));
-        }
-
-        public bool DeleteRole(string roleId)
-        {
-            string query = "DELETE FROM roles WHERE RoleId = @roleId;";
-
-            return DeleteIfExists(
-                "roles",
-                "RoleId",
-                roleId,
-                query,
-                ("@roleId", roleId));
-        }
-
         public bool InsertSkill(string skillId, string name)
         {
             string query = "INSERT INTO skills(SkillId, Name) VALUES(@skillId, @name);";
@@ -273,69 +220,6 @@ namespace HomeCareManager.Core.Data
                 query,
                 ("@skillId", skillId),
                 ("@name", name));
-        }
-
-        public bool UpdateSkill(string skillId, string name)
-        {
-            string query = "UPDATE skills SET Name = @name WHERE SkillId = @skillId;";
-
-            return UpdateIfExists(
-                "skills",
-                "SkillId",
-                skillId,
-                query,
-                ("@skillId", skillId),
-                ("@name", name));
-        }
-
-        public bool DeleteSkill(string skillId)
-        {
-            string query = "DELETE FROM skills WHERE SkillId = @skillId;";
-
-            return DeleteIfExists(
-                "skills",
-                "SkillId",
-                skillId,
-                query,
-                ("@skillId", skillId));
-        }
-
-        public bool InsertTaskStatus(string statusId, string name)
-        {
-            string query = "INSERT INTO task_status(StatusId, Name) VALUES(@statusId, @name);";
-
-            return InsertIfNotExists(
-                "task_status",
-                "StatusId",
-                statusId,
-                query,
-                ("@statusId", statusId),
-                ("@name", name));
-        }
-
-        public bool UpdateTaskStatus(string statusId, string name)
-        {
-            string query = "UPDATE task_status SET Name = @name WHERE StatusId = @statusId;";
-
-            return UpdateIfExists(
-                "task_status",
-                "StatusId",
-                statusId,
-                query,
-                ("@statusId", statusId),
-                ("@name", name));
-        }
-
-        public bool DeleteTaskStatus(string statusId)
-        {
-            string query = "DELETE FROM task_status WHERE StatusId = @statusId;";
-
-            return DeleteIfExists(
-                "task_status",
-                "StatusId",
-                statusId,
-                query,
-                ("@statusId", statusId));
         }
 
         public User? GetUserByEmail(string email)
@@ -607,18 +491,6 @@ namespace HomeCareManager.Core.Data
                 ("@statusId", statusId));
         }
 
-        public bool DeleteTask(string taskId)
-        {
-            string query = "DELETE FROM tasks WHERE TaskId = @taskId;";
-
-            return DeleteIfExists(
-                "tasks",
-                "TaskId",
-                taskId,
-                query,
-                ("@taskId", taskId));
-        }
-
         public bool InsertTaskAssignment(
             string assignmentId,
             string userId,
@@ -630,32 +502,6 @@ namespace HomeCareManager.Core.Data
                 "VALUES(@userId, @taskId, @assignmentId, @assignedDate, @statusId);";
 
             return InsertIfNotExists(
-                "task_assignments",
-                "AssignmentId",
-                assignmentId,
-                query,
-                ("@userId", userId),
-                ("@taskId", taskId),
-                ("@assignmentId", assignmentId),
-                ("@assignedDate", assignedDate),
-                ("@statusId", statusId));
-        }
-
-        public bool UpdateTaskAssignment(
-            string assignmentId,
-            string userId,
-            string taskId,
-            DateTime assignedDate,
-            string statusId)
-        {
-            string query = "UPDATE task_assignments " +
-                "SET UserId = @userId, " +
-                "TaskId = @taskId, " +
-                "AssignedDate = @assignedDate, " +
-                "StatusId = @statusId " +
-                "WHERE AssignmentId = @assignmentId;";
-
-            return UpdateIfExists(
                 "task_assignments",
                 "AssignmentId",
                 assignmentId,
@@ -693,25 +539,6 @@ namespace HomeCareManager.Core.Data
                 ("@rejectedStatusId", RejectedStatusId));
         }
 
-        public bool DeleteTaskAssignment(string assignmentId)
-        {
-            string query = "DELETE FROM task_assignments WHERE AssignmentId = @assignmentId;";
-
-            return DeleteIfExists(
-                "task_assignments",
-                "AssignmentId",
-                assignmentId,
-                query,
-                ("@assignmentId", assignmentId));
-        }
-
-        public bool DeleteTaskAssignmentsForTask(string taskId)
-        {
-            string query = "DELETE FROM task_assignments WHERE TaskId = @taskId;";
-
-            return ExecuteNonQuery(query, ("@taskId", taskId));
-        }
-
         public bool InsertIncident(
             string incidentId,
             string userId,
@@ -744,62 +571,6 @@ namespace HomeCareManager.Core.Data
                 ("@resolvedAt", resolvedAt.HasValue ? resolvedAt.Value : DBNull.Value),
                 ("@assignedToUserId", string.IsNullOrWhiteSpace(assignedToUserId) ? DBNull.Value : assignedToUserId),
                 ("@reportId", string.IsNullOrWhiteSpace(reportId) ? DBNull.Value : reportId));
-        }
-
-        public bool UpdateIncident(
-            string incidentId,
-            string userId,
-            string taskId,
-            string description,
-            DateTime createdAt,
-            string status,
-            string severity = "Medium",
-            string resolutionNotes = "",
-            DateTime? resolvedAt = null,
-            string assignedToUserId = "",
-            string reportId = "")
-        {
-            string query = "UPDATE incidents " +
-                "SET UserId = @userId, " +
-                "TaskId = @taskId, " +
-                "Description = @description, " +
-                "CreatedAt = @createdAt, " +
-                "Status = @status, " +
-                "Severity = @severity, " +
-                "ResolutionNotes = @resolutionNotes, " +
-                "ResolvedAt = @resolvedAt, " +
-                "AssignedToUserId = @assignedToUserId, " +
-                "ReportId = @reportId " +
-                "WHERE IncidentId = @incidentId;";
-
-            return UpdateIfExists(
-                "incidents",
-                "IncidentId",
-                incidentId,
-                query,
-                ("@userId", userId),
-                ("@incidentId", incidentId),
-                ("@taskId", taskId),
-                ("@description", description),
-                ("@createdAt", createdAt),
-                ("@status", status),
-                ("@severity", severity),
-                ("@resolutionNotes", resolutionNotes),
-                ("@resolvedAt", resolvedAt.HasValue ? resolvedAt.Value : DBNull.Value),
-                ("@assignedToUserId", string.IsNullOrWhiteSpace(assignedToUserId) ? DBNull.Value : assignedToUserId),
-                ("@reportId", string.IsNullOrWhiteSpace(reportId) ? DBNull.Value : reportId));
-        }
-
-        public bool DeleteIncident(string incidentId)
-        {
-            string query = "DELETE FROM incidents WHERE IncidentId = @incidentId;";
-
-            return DeleteIfExists(
-                "incidents",
-                "IncidentId",
-                incidentId,
-                query,
-                ("@incidentId", incidentId));
         }
 
         public bool UpdateIncidentFollowUp(string incidentId, string status, string resolutionNotes)
@@ -854,63 +625,12 @@ namespace HomeCareManager.Core.Data
                 ("@taskId", taskId));
         }
 
-        public bool UpdateReport(
-            string reportId,
-            string userId,
-            string notes,
-            DateTime createdAt,
-            string statusBefore,
-            string statusAfter,
-            string duration,
-            string taskId)
-        {
-            string query = "UPDATE reports " +
-                "SET UserId = @userId, " +
-                "Notes = @notes, " +
-                "CreatedAt = @createdAt, " +
-                "StatusBefore = @statusBefore, " +
-                "StatusAfter = @statusAfter, " +
-                "Duration = @duration, " +
-                "TaskId = @taskId " +
-                "WHERE ReportId = @reportId;";
-
-            return UpdateIfExists(
-                "reports",
-                "ReportId",
-                reportId,
-                query,
-                ("@reportId", reportId),
-                ("@userId", userId),
-                ("@notes", notes),
-                ("@createdAt", createdAt),
-                ("@statusBefore", statusBefore),
-                ("@statusAfter", statusAfter),
-                ("@duration", duration),
-                ("@taskId", taskId));
-        }
-
-        public bool DeleteReport(string reportId)
-        {
-            string query = "DELETE FROM reports WHERE ReportId = @reportId;";
-
-            return DeleteIfExists(
-                "reports",
-                "ReportId",
-                reportId,
-                query,
-                ("@reportId", reportId));
-        }
-
         public ReportSummary? GetReportForIncident(string incidentId)
         {
             const string query = "SELECT r.ReportId, r.Notes, r.CreatedAt, r.StatusBefore, r.StatusAfter, r.Duration, " +
-                "COALESCE(t.Description, r.TaskId) AS TaskDescription, " +
-                "COALESCE(p.Name, '') AS PatientName, " +
                 "COALESCE(u.Name, r.UserId) AS CreatedBy " +
                 "FROM incidents i " +
                 "INNER JOIN reports r ON r.ReportId = i.ReportId OR (i.ReportId IS NULL AND r.TaskId = i.TaskId) " +
-                "LEFT JOIN tasks t ON t.TaskId = r.TaskId " +
-                "LEFT JOIN patients p ON p.PatientId = t.PatientId " +
                 "LEFT JOIN users u ON u.UserId = r.UserId " +
                 "WHERE i.IncidentId = @incidentId " +
                 "ORDER BY CASE WHEN r.ReportId = i.ReportId THEN 0 ELSE 1 END, r.CreatedAt DESC " +
@@ -919,8 +639,6 @@ namespace HomeCareManager.Core.Data
             return ExecuteReader(query, reader => new ReportSummary
             {
                 ReportId = reader.GetString("ReportId"),
-                TaskDescription = reader.GetString("TaskDescription"),
-                PatientName = reader.GetString("PatientName"),
                 CreatedBy = reader.GetString("CreatedBy"),
                 Notes = reader.GetString("Notes"),
                 CreatedAt = reader.GetDateTime("CreatedAt"),
@@ -941,32 +659,6 @@ namespace HomeCareManager.Core.Data
                 "VALUES(@availabilityId, @startTime, @zone, @endTime, @userId);";
 
             return InsertIfNotExists(
-                "availability",
-                "AvailabilityId",
-                availabilityId,
-                query,
-                ("@availabilityId", availabilityId),
-                ("@startTime", startTime),
-                ("@zone", zone),
-                ("@endTime", endTime),
-                ("@userId", userId));
-        }
-
-        public bool UpdateAvailability(
-            string availabilityId,
-            DateTime startTime,
-            string zone,
-            DateTime endTime,
-            string userId)
-        {
-            string query = "UPDATE availability " +
-                "SET StartTime = @startTime, " +
-                "Zone = @zone, " +
-                "EndTime = @endTime, " +
-                "UserId = @userId " +
-                "WHERE AvailabilityId = @availabilityId;";
-
-            return UpdateIfExists(
                 "availability",
                 "AvailabilityId",
                 availabilityId,
@@ -1026,7 +718,7 @@ namespace HomeCareManager.Core.Data
 
         public List<UserSummary> GetUserSummaries()
         {
-            const string query = "SELECT u.UserId, u.Name, u.Email, u.IsActive, u.SkillId, COALESCE(r.RoleName, u.RoleId) AS RoleName " +
+            const string query = "SELECT u.UserId, u.Name, u.Email, u.IsActive, COALESCE(r.RoleName, u.RoleId) AS RoleName " +
                 "FROM users u " +
                 "LEFT JOIN roles r ON r.RoleId = u.RoleId " +
                 "ORDER BY u.Name;";
@@ -1037,14 +729,13 @@ namespace HomeCareManager.Core.Data
                 Name = reader.GetString("Name"),
                 Email = reader.GetString("Email"),
                 RoleName = reader.GetString("RoleName"),
-                SkillId = reader.GetString("SkillId"),
                 IsActive = reader.GetBoolean("IsActive")
             });
         }
 
         public List<UserSummary> GetEligibleWorkerSummaries(string requiredSkillId, DateTime taskDate, string patientZone)
         {
-            const string query = "SELECT DISTINCT u.UserId, u.Name, u.Email, u.IsActive, u.SkillId, COALESCE(r.RoleName, u.RoleId) AS RoleName " +
+            const string query = "SELECT DISTINCT u.UserId, u.Name, u.Email, u.IsActive, COALESCE(r.RoleName, u.RoleId) AS RoleName " +
                 "FROM users u " +
                 "LEFT JOIN roles r ON r.RoleId = u.RoleId " +
                 "INNER JOIN availability av ON av.UserId = u.UserId " +
@@ -1061,7 +752,6 @@ namespace HomeCareManager.Core.Data
                 Name = reader.GetString("Name"),
                 Email = reader.GetString("Email"),
                 RoleName = reader.GetString("RoleName"),
-                SkillId = reader.GetString("SkillId"),
                 IsActive = reader.GetBoolean("IsActive")
             }, ("@requiredSkillId", requiredSkillId), ("@taskDate", taskDate), ("@patientZone", patientZone));
         }
@@ -1075,8 +765,7 @@ namespace HomeCareManager.Core.Data
                 "COALESCE(a.AssignmentCount, 0) AS AssignmentCount, " +
                 "COALESCE(a.AssignedTo, '') AS AssignedTo, " +
                 "'' AS CurrentUserAssignmentId, " +
-                "'' AS CurrentUserAssignmentStatusId, " +
-                "'' AS CurrentUserAssignmentStatusName " +
+                "'' AS CurrentUserAssignmentStatusId " +
                 "FROM tasks t " +
                 "LEFT JOIN patients p ON p.PatientId = t.PatientId " +
                 "LEFT JOIN task_status ts ON ts.StatusId = t.StatusId " +
@@ -1102,8 +791,7 @@ namespace HomeCareManager.Core.Data
                 "COALESCE(a.AssignmentCount, 0) AS AssignmentCount, " +
                 "COALESCE(a.AssignedTo, '') AS AssignedTo, " +
                 "COALESCE(currentAssignment.AssignmentId, '') AS CurrentUserAssignmentId, " +
-                "COALESCE(currentAssignment.StatusId, '') AS CurrentUserAssignmentStatusId, " +
-                "COALESCE(currentStatus.Name, '') AS CurrentUserAssignmentStatusName " +
+                "COALESCE(currentAssignment.StatusId, '') AS CurrentUserAssignmentStatusId " +
                 "FROM tasks t " +
                 "LEFT JOIN patients p ON p.PatientId = t.PatientId " +
                 "LEFT JOIN task_status ts ON ts.StatusId = t.StatusId " +
@@ -1126,7 +814,6 @@ namespace HomeCareManager.Core.Data
                 ") latest ON latest.TaskId = ta.TaskId AND latest.AssignedDate = ta.AssignedDate " +
                 "WHERE ta.UserId = @userId" +
                 ") currentAssignment ON currentAssignment.TaskId = t.TaskId " +
-                "LEFT JOIN task_status currentStatus ON currentStatus.StatusId = currentAssignment.StatusId " +
                 "WHERE (" +
                 "EXISTS (" +
                 "SELECT 1 FROM task_assignments taMine " +
@@ -1183,8 +870,7 @@ namespace HomeCareManager.Core.Data
                 AssignmentCount = Convert.ToInt32(reader["AssignmentCount"]),
                 AssignedTo = reader.GetString("AssignedTo"),
                 CurrentUserAssignmentId = reader.GetString("CurrentUserAssignmentId"),
-                CurrentUserAssignmentStatusId = reader.GetString("CurrentUserAssignmentStatusId"),
-                CurrentUserAssignmentStatusName = reader.GetString("CurrentUserAssignmentStatusName")
+                CurrentUserAssignmentStatusId = reader.GetString("CurrentUserAssignmentStatusId")
             };
         }
 
@@ -1240,27 +926,5 @@ namespace HomeCareManager.Core.Data
             });
         }
 
-        public int CountActivePatients()
-        {
-            return ExecuteCount("SELECT COUNT(*) FROM patients;");
-        }
-
-        public int CountPendingTasks()
-        {
-            return ExecuteCount("SELECT COUNT(*) FROM tasks t " +
-                "LEFT JOIN task_status ts ON ts.StatusId = t.StatusId " +
-                "WHERE LOWER(COALESCE(ts.Name, t.StatusId)) = 'pending';");
-        }
-
-        public int CountActiveUsers()
-        {
-            return ExecuteCount("SELECT COUNT(*) FROM users WHERE IsActive = 1;");
-        }
-
-        public int CountOpenIncidents()
-        {
-            return ExecuteCount("SELECT COUNT(*) FROM incidents " +
-                "WHERE LOWER(Status) NOT IN ('closed', 'resolved');");
-        }
     }
 }

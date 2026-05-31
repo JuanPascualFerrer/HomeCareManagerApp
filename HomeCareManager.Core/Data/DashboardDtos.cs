@@ -18,7 +18,6 @@ namespace HomeCareManager.Core.Data
         public string AssignedTo { get; set; } = string.Empty;
         public string CurrentUserAssignmentId { get; set; } = string.Empty;
         public string CurrentUserAssignmentStatusId { get; set; } = string.Empty;
-        public string CurrentUserAssignmentStatusName { get; set; } = string.Empty;
     }
 
     public class IncidentSummary
@@ -39,8 +38,6 @@ namespace HomeCareManager.Core.Data
     public class ReportSummary
     {
         public string ReportId { get; set; } = string.Empty;
-        public string TaskDescription { get; set; } = string.Empty;
-        public string PatientName { get; set; } = string.Empty;
         public string CreatedBy { get; set; } = string.Empty;
         public string Notes { get; set; } = string.Empty;
         public string StatusBefore { get; set; } = string.Empty;
@@ -55,7 +52,6 @@ namespace HomeCareManager.Core.Data
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string RoleName { get; set; } = string.Empty;
-        public string SkillId { get; set; } = string.Empty;
         public bool IsActive { get; set; }
     }
 

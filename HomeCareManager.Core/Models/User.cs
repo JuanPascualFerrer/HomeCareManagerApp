@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
 
 namespace HomeCareManager.Core.Models
 {
@@ -15,8 +11,6 @@ namespace HomeCareManager.Core.Models
         public bool PasswordChanged { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
-
-        // Foreign keys
         public string RoleId { get; set; } = string.Empty;
         public string SkillId { get; set; } = string.Empty;
     }
